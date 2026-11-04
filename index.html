@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Ekran TV — o'zbek kinolari va jonli efir</title>
-<meta name="description" content="Ekran TV — o'zbek kinolarini onlayn tomosha qiling. 24/7 jonli efir kanallari, teledastur va kinolar katalogi.">
+<title>Ekran TV — o'zbek kinolari onlayn</title>
+<meta name="description" content="Ekran TV — o'zbek kinolarini onlayn tomosha qiling: kinolar katalogi, qidiruv va ko'rishni davom ettirish.">
 <meta name="theme-color" content="#0e0c18">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Ekran TV">
-<meta property="og:description" content="O'zbek kinolari va 24/7 jonli efir kanallari.">
+<meta property="og:description" content="O'zbek kinolari onlayn.">
 <meta property="og:image" content="icons/og-image.png">
 <meta property="og:locale" content="uz_UZ">
 <meta name="twitter:card" content="summary_large_image">
@@ -30,10 +30,8 @@
     <a class="logo" href="#bosh" aria-label="Bosh sahifa"><i class="logo-mark"></i><span id="siteName">Ekran TV</span></a>
     <nav class="main" aria-label="Asosiy menyu">
       <a href="#bosh" class="on">Bosh sahifa</a>
-      <a href="#efir">Jonli efir</a>
-      <a href="#kanallar">Telekanallar</a>
       <a href="#kinolar">Kinolar</a>
-      <a href="#dastur">Teledastur</a>
+      <a href="#haqida">Biz haqimizda</a>
     </nav>
     <div class="top-right">
       <label class="search" for="q">
@@ -70,40 +68,7 @@
     </div>
   </section>
 
-  <section class="block" id="efir">
-    <div class="wrap">
-      <div class="block-head">
-        <div><span class="eyebrow" id="liveChan"></span><h2>Hozir efirda</h2></div>
-        <span class="time" id="clock"></span>
-      </div>
-      <div class="live">
-        <div class="live-screen" id="liveScreen" role="button" tabindex="0" aria-label="Jonli efirni ko'rish">
-          <canvas id="liveCanvas"></canvas>
-          <img class="thumb" id="liveThumb" alt="" hidden>
-          <span class="live-badge"><i class="dot"></i>JONLI</span>
-          <span class="live-play" aria-hidden="true"></span>
-          <div class="live-cap">
-            <h3 id="liveTitle"></h3>
-            <div class="row"><span id="liveStart"></span><span class="bar"><i id="liveBar"></i></span><span id="liveEnd"></span></div>
-          </div>
-        </div>
-        <div class="live-side">
-          <span class="eyebrow">Keyingi ko'rsatuvlar</span>
-          <div class="next-list" id="nextList"></div>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <section class="block tight" id="kanallar">
-    <div class="wrap">
-      <div class="block-head">
-        <div><span class="eyebrow">24/7 efir</span><h2>Telekanallar</h2></div>
-        <span class="eyebrow">Kanalni tanlang</span>
-      </div>
-      <div class="chan-grid" id="chanGrid"></div>
-    </div>
-  </section>
 
   <section class="block tight" id="kinolar">
     <div class="wrap">
@@ -123,23 +88,13 @@
     </div>
   </section>
 
-  <section class="block tight" id="dastur">
-    <div class="wrap">
-      <div class="block-head">
-        <div><span class="eyebrow" id="epgDate"></span><h2>Bugungi teledastur</h2></div>
-        <span class="eyebrow">Toshkent vaqti</span>
-      </div>
-      <div class="epg-tabs chips" id="epgTabs" role="group" aria-label="Kanal"></div>
-      <div class="epg" id="epg"></div>
-    </div>
-  </section>
 
   <section class="block tight" id="haqida">
     <div class="wrap">
       <div class="block-head"><div><span class="eyebrow">Biz haqimizda</span><h2>Nega Ekran TV</h2></div></div>
       <div class="about">
         <div class="cell"><h3>O'zimizning kinolar</h3><p>Barcha kinolar va seriallar Ekran TV jamoasi tomonidan suratga olingan yoki huquqi bizga tegishli.</p></div>
-        <div class="cell"><h3>24/7 jonli efir</h3><p>To'rtta kanal kun bo'yi to'xtovsiz efirda. Teledasturni oldindan ko'rib, sevimli kinongizni o'tkazib yubormang.</p></div>
+        <div class="cell"><h3>To'xtagan joydan davom eting</h3><p>Kinoni yarmida qoldirsangiz, keyingi safar sayt uni aynan to'xtagan joyingizdan davom ettiradi.</p></div>
         <div class="cell"><h3>Istalgan qurilmada</h3><p>Telefon, planshet, kompyuter va Smart TV brauzerida ishlaydi. Telefoningizga ilova sifatida o'rnating.</p></div>
       </div>
     </div>
@@ -155,9 +110,8 @@
 
 <nav class="tabbar" aria-label="Pastki menyu">
   <a href="#bosh" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Bosh</a>
-  <a href="#efir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="m8 2 4 4 4-4"/></svg>Efir</a>
   <a href="#kinolar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4"/></svg>Kinolar</a>
-  <a href="#dastur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Dastur</a>
+  <a href="#haqida"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Biz haqimizda</a>
 </nav>
 
 <div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="pTitle">
