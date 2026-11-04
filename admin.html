@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Ekran TV — Boshqaruv paneli</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#0e0c18;--surface:#17142a;--surface-2:#211d3a;--line:#2f2a4d;--fg:#f3effa;--muted:#a59fbf;
+  --accent:#f4b63f;--accent-ink:#1d1405;--ok:#4fbf7a;--bad:#ff5a5f;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{margin:0;font-family:var(--f-body);font-size:15px;line-height:1.5}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{border-bottom:1px solid var(--line);background:var(--surface)}
+header .wrap{display:flex;align-items:center;gap:16px;min-height:64px;flex-wrap:wrap;padding-block:10px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:800;font-size:17px}
+.logo-mark{width:28px;height:20px;border-radius:5px;background:var(--accent);position:relative;flex:none}
+.logo-mark::after{content:"";position:absolute;left:10px;top:5px;border-left:9px solid var(--accent-ink);border-top:5px solid transparent;border-bottom:5px solid transparent}
+.logo small{font-family:var(--f-body);font-weight:600;color:var(--muted);font-size:13px}
+.conn{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.conn i{width:9px;height:9px;border-radius:50%;background:var(--bad)}
+.conn.on i{background:var(--ok)}
+nav.tabs{display:flex;gap:6px;padding-block:14px;flex-wrap:wrap}
+nav.tabs button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 16px;font-weight:700;font-size:14px;color:var(--muted)}
+nav.tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+main{padding-bottom:120px}
+h1,h2,h3{margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-size:22px;font-weight:600}
+h3{font-size:16px}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:var(--muted);min-width:0}
+label.f span.hint{font-weight:500;font-size:12px}
+input[type=text],input[type=password],input[type=number],input[type=url],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--fg);font-size:15px;font-weight:500}
+textarea{min-height:90px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);outline:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:11px 20px;font-weight:800;font-size:14px;white-space:nowrap}
+.btn-accent{background:var(--accent);color:var(--accent-ink)}
+.btn-ghost{background:var(--surface-2);border:1px solid var(--line)}
+.btn-danger{background:transparent;border:1px solid var(--bad);color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-sm{padding:7px 13px;font-size:13px}
+details{border:1px solid var(--line);border-radius:12px;padding:12px 16px;background:var(--bg)}
+details summary{cursor:pointer;font-weight:700}
+details ol{margin:10px 0 0;padding-left:20px;color:var(--muted)}
+details li{margin:6px 0}
+code{font-family:var(--f-mono);font-size:13px;background:var(--surface-2);padding:1px 6px;border-radius:5px;color:var(--fg)}
+.status{font-size:14px;padding:12px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.status.ok{border-color:color-mix(in oklab,var(--ok) 60%,var(--line));color:var(--ok)}
+.status.bad{border-color:color-mix(in oklab,var(--bad) 60%,var(--line));color:var(--bad)}
+.films{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.film{display:grid;grid-template-columns:56px minmax(0,1fr);gap:14px;align-items:center;padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.film.changed{border-color:color-mix(in oklab,var(--accent) 60%,var(--line))}
+.thumb{width:56px;aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,var(--c1),var(--c2));background-size:cover;background-position:center;position:relative;overflow:hidden}
+.film b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.film small{color:var(--muted);display:block}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;margin-top:4px}
+.pill.ok{background:color-mix(in oklab,var(--ok) 18%,transparent);color:var(--ok)}
+.pill.no{background:var(--surface-2);color:var(--muted)}
+.film .acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.editor{border-color:var(--accent)}
+.ytprev{display:flex;gap:12px;align-items:center;font-size:13px}
+.ytprev img{width:120px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#000}
+.poster-prev{width:90px;aspect-ratio:2/3;border-radius:8px;object-fit:cover;background:var(--surface-2)}
+.publish{position:fixed;left:0;right:0;bottom:0;z-index:20;background:color-mix(in oklab,var(--surface) 94%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.publish .wrap{display:flex;align-items:center;gap:14px;min-height:68px;flex-wrap:wrap;padding-block:10px}
+.publish .wrap > span{flex:1;min-width:200px;font-size:14px}
+.log{font-family:var(--f-mono);font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;max-height:260px;overflow:auto;white-space:pre-wrap;color:var(--muted)}
+.site-link{font-family:var(--f-mono);font-size:15px;color:var(--accent);word-break:break-all}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:700;font-size:14px;max-width:calc(100% - 32px)}
+@media (max-width:640px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}.conn{margin-left:0}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="logo"><i class="logo-mark"></i><span>Ekran TV <small>· Boshqaruv paneli</small></span></div>
+    <div class="conn" id="conn"><i></i><span id="connText">GitHub'ga ulanmagan</span></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav class="tabs" role="tablist">
+    <button type="button" role="tab" data-tab="films" aria-selected="true">Kinolar</button>
+    <button type="button" role="tab" data-tab="install" id="installTabBtn">Saytni o'rnatish</button>
+    <button type="button" role="tab" data-tab="settings">Ulanish</button>
+  </nav>
+
+  <!-- ULANISH -->
+  <section data-panel="settings" class="stack" hidden>
+    <div class="card stack">
+      <div><h2>GitHub'ga ulanish</h2><p class="muted" style="margin:6px 0 0">Panel kinolarni to'g'ridan-to'g'ri saytingizga yozishi uchun GitHub kaliti (token) kerak. Kalit faqat shu qurilmada saqlanadi.</p></div>
+      <div class="grid3">
+        <label class="f">GitHub login<input type="text" id="owner" autocomplete="off" spellcheck="false"></label>
+        <label class="f">Repository nomi<input type="text" id="repo" autocomplete="off" spellcheck="false"></label>
+        <label class="f">Branch<input type="text" id="branch" autocomplete="off" spellcheck="false"></label>
+      </div>
+      <label class="f">GitHub token<input type="password" id="token" autocomplete="off" spellcheck="false" placeholder="github_pat_..."><span class="hint">Kalitni hech kimga bermang va hech qayerga joylamang.</span></label>
+      <details>
+        <summary>Token qanday olinadi (2 daqiqa)</summary>
+        <ol>
+          <li>github.com'ga kiring → o'ng yuqoridagi rasmingiz → <b>Settings</b>.</li>
+          <li>Chap menyuning eng pastida <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>
+          <li><b>Token name</b>: <code>ekran-tv-panel</code>. <b>Expiration</b>: 1 yil (yoki o'zingiz tanlang).</li>
+          <li><b>Repository access</b> → <b>Only select repositories</b> → <code>ekran-tv</code> ni tanlang.</li>
+          <li><b>Permissions</b> → <b>Repository permissions</b> bo'limida: <b>Contents</b> → <i>Read and write</i>, <b>Pages</b> → <i>Read and write</i>.</li>
+          <li>Pastdagi <b>Generate token</b> ni bosing, chiqqan kalitni nusxalab shu yerga qo'ying.</li>
+        </ol>
+      </details>
+      <div class="row">
+        <button class="btn btn-accent" type="button" id="connectBtn">Ulanish</button>
+        <button class="btn btn-ghost btn-sm" type="button" id="forgetBtn">Kalitni bu qurilmadan o'chirish</button>
+      </div>
+      <div class="status" id="connStatus" hidden></div>
+    </div>
+  </section>
+
+  <!-- KINOLAR -->
+  <section data-panel="films" class="stack">
+    <div class="row" style="justify-content:space-between">
+      <div><h2>Kinolar</h2><p class="muted" style="margin:6px 0 0" id="filmsSub">Avval «Ulanish» bo'limida GitHub'ga ulaning.</p></div>
+      <div class="row">
+        <button class="btn btn-ghost btn-sm" type="button" id="reloadBtn" disabled>Saytdan qayta yuklash</button>
+        <button class="btn btn-accent" type="button" id="newBtn" disabled>＋ Yangi kino</button>
+      </div>
+    </div>
+
+    <form class="card stack editor" id="editor" hidden novalidate>
+      <div class="row" style="justify-content:space-between"><h3 id="edTitle">Yangi kino</h3><button class="btn btn-ghost btn-sm" type="button" id="edCancel">Bekor qilish</button></div>
+      <label class="f">Video havolasi<input type="url" id="fYt" placeholder="https://..." autocomplete="off"><span class="hint">YouTube havolasi, bulutdagi video fayl (.mp4) havolasi yoki Bunny Stream / Vimeo havolasi. Bo'sh qolsa, kino «Tez orada» bo'lib turadi.</span></label>
+      <details>
+        <summary>Qaysi bulutlar ishlaydi?</summary>
+        <ol>
+          <li><b>YouTube</b> — bepul. Videoni «Ro'yxatda yo'q» (Unlisted) qilib yuklang va havolasini qo'ying.</li>
+          <li><b>Bunny Stream</b> (bunny.net) — arzon, reklamasiz, tez. Video → <i>Embed</i> havolasini qo'ying (<code>iframe.mediadelivery.net/embed/...</code>).</li>
+          <li><b>Vimeo</b> — video sozlamalarida joylashtirishga ruxsat bering, so'ng video havolasini qo'ying.</li>
+          <li><b>Har qanday bulutdagi .mp4 fayl</b> (Cloudflare R2, Backblaze B2, o'z serveringiz) — fayl <i>ommaviy</i> bo'lishi va havola <code>.mp4</code> bilan tugashi kerak.</li>
+          <li><b>Dropbox</b> — sinov uchun yaraydi, lekin ko'p tomoshabin bo'lsa Dropbox havolani bloklaydi.</li>
+          <li><b>Google Drive ishlamaydi</b>: u videoni boshqa saytda ko'rsatishga ruxsat bermaydi va ko'p ko'rilganda bloklaydi.</li>
+        </ol>
+      </details>
+      <div class="ytprev" id="ytPrev" hidden><img id="ytImg" alt="Video rasmi"><span id="ytTxt"></span></div>
+      <div class="grid2">
+        <label class="f">Kino nomi *<input type="text" id="fTitle" required></label>
+        <label class="f">Janr *<input type="text" id="fGenre" list="genreList" required><datalist id="genreList"></datalist></label>
+      </div>
+      <div class="grid3">
+        <label class="f">Yili<input type="number" id="fYear" min="1900" max="2100"></label>
+        <label class="f">Davomiyligi: soat<input type="number" id="fH" min="0" max="10" value="1"></label>
+        <label class="f">daqiqa<input type="number" id="fM" min="0" max="59" value="30"></label>
+      </div>
+      <div class="grid2">
+        <label class="f">Yosh chegarasi<select id="fAge"><option>0+</option><option>6+</option><option selected>12+</option><option>16+</option><option>18+</option></select></label>
+        <label class="f">Reyting (10 ballik)<input type="number" id="fRating" min="0" max="10" step="0.1" value="8.0"></label>
+      </div>
+      <label class="f">Qisqa tavsif<textarea id="fDesc" maxlength="400"></textarea></label>
+      <div class="row" style="align-items:flex-start">
+        <img class="poster-prev" id="posterPrev" alt="" hidden>
+        <label class="f" style="flex:1">Poster rasmi (ixtiyoriy)<input type="file" id="fPoster" accept="image/*"><span class="hint">Vertikal rasm yaxshi chiqadi. Panel uni o'zi 600×900 o'lchamga keltiradi. Bo'sh qolsa, sayt rangli poster yasaydi.</span></label>
+      </div>
+      <label class="row" style="gap:8px;font-weight:600"><input type="checkbox" id="fHero"> Bosh sahifada katta qilib ko'rsatish</label>
+      <div class="status bad" id="edErr" hidden></div>
+      <div class="row"><button class="btn btn-accent" type="submit">Saqlash</button><span class="muted" style="font-size:13px">Saqlangach, pastdagi «Saytga chiqarish» tugmasini bosing.</span></div>
+    </form>
+
+    <div class="films" id="films"></div>
+  </section>
+
+  <!-- O'RNATISH -->
+  <section data-panel="install" class="stack" hidden>
+    <div class="card stack">
+      <div><h2>Saytni GitHub'ga o'rnatish</h2><p class="muted" style="margin:6px 0 0">Saytning barcha fayllarini repository'ga yuklaydi va GitHub Pages'ni yoqadi. Qo'lda hech narsa yuklash shart emas.</p></div>
+      <div id="installUnavailable" class="status" hidden>Bu bo'lim faqat kompyuteringizdagi <code>ekran-tv-panel.html</code> faylida ishlaydi.</div>
+      <div id="installBox" class="stack">
+        <p class="muted" style="margin:0" id="installList"></p>
+        <label class="row" style="gap:8px;font-weight:600"><input type="checkbox" id="optFilms"> Kinolar ro'yxatini (films.js) ham almashtirish <span class="muted" style="font-weight:500">— faqat birinchi o'rnatishda belgilang</span></label>
+        <label class="row" style="gap:8px;font-weight:600"><input type="checkbox" id="optStray" checked> Avval xato yuklangan «ekran-tv» nomli ortiqcha faylni o'chirish</label>
+        <div class="row"><button class="btn btn-accent" type="button" id="installBtn" disabled>Saytni o'rnatish</button></div>
+        <div class="log" id="installLog" hidden></div>
+        <div class="status ok" id="siteBox" hidden>Sayt manzili: <a class="site-link" id="siteLink" target="_blank" rel="noopener"></a><br><span class="muted">Birinchi marta ochilishiga 1–3 daqiqa vaqt ketadi.</span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="publish" id="publishBar" hidden>
+  <div class="wrap">
+    <span id="pubText"></span>
+    <button class="btn btn-ghost btn-sm" type="button" id="discardBtn">O'zgarishlarni bekor qilish</button>
+    <button class="btn btn-accent" type="button" id="publishBtn">Saytga chiqarish</button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const SITE_FILES = null;
+(function(){
+"use strict";
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = { get(k,d){ try{ const v=localStorage.getItem("ekran-admin-"+k); return v===null?d:JSON.parse(v);}catch(e){return d;} },
+                set(k,v){ try{ localStorage.setItem("ekran-admin-"+k, JSON.stringify(v)); }catch(e){} },
+                del(k){ try{ localStorage.removeItem("ekran-admin-"+k); }catch(e){} } };
+function toast(m,ms=2800){ const t=$("#toast"); t.textContent=m; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,ms); }
+
+/* ---------- Tabs ---------- */
+function showTab(name){ $$("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name)); $$("[data-panel]").forEach(p=>p.hidden=p.dataset.panel!==name); }
+$("nav.tabs").addEventListener("click", e=>{ const b=e.target.closest("[data-tab]"); if(b) showTab(b.dataset.tab); });
+
+/* ---------- Config ---------- */
+const guess = (()=>{ const m=location.hostname.match(/^([\w-]+)\.github\.io$/); return m?{owner:m[1],repo:location.pathname.split("/").filter(Boolean)[0]||""}:null; })();
+let cfg = Object.assign({ owner:"alishertv3003-max", repo:"ekran-tv", branch:"main", token:"" }, guess||{}, store.get("cfg",{}));
+["owner","repo","branch","token"].forEach(k=>$("#"+k).value=cfg[k]||"");
+
+/* ---------- Base64 (UTF-8) ---------- */
+function b64FromBytes(bytes){ let s=""; for(let i=0;i<bytes.length;i+=0x8000) s+=String.fromCharCode.apply(null, bytes.subarray(i,i+0x8000)); return btoa(s); }
+const b64FromText = t => b64FromBytes(new TextEncoder().encode(t));
+const textFromB64 = b => new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/g,"")), c=>c.charCodeAt(0)));
+
+/* ---------- GitHub API ---------- */
+async function gh(path, opts={}){
+  const url = path.startsWith("http") ? path : `https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}${path}`;
+  if(/[^\x21-\x7e]/.test(cfg.token)) throw new Error("Tokenda ortiqcha belgi bor (bo'sh joy yoki boshqa harf). Uni GitHub'dan qaytadan nusxalab qo'ying.");
+  let r;
+  try{ r = await fetch(url, Object.assign({}, opts, { headers: Object.assign({ "Accept":"application/vnd.github+json", "Authorization":"Bearer "+cfg.token, "X-GitHub-Api-Version":"2022-11-28" }, opts.body?{"Content-Type":"application/json"}:{}) })); }
+  catch(e){ throw new Error("GitHub bilan bog'lanib bo'lmadi. Panelni Claude ichida emas, faylni yuklab olib Chrome'da oching. Internet, VPN yoki reklama bloklovchini ham tekshiring."); }
+  let data=null; try{ data=await r.json(); }catch(e){}
+  return { ok:r.ok, status:r.status, data };
+}
+async function getFile(path){
+  const r = await gh(`/contents/${path.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(cfg.branch)}`);
+  if(r.status===404) return null;
+  if(!r.ok) throw apiErr(r);
+  return r.data;
+}
+async function putFile(path, b64, message){
+  const cur = await getFile(path).catch(()=>null);
+  const body = { message, content:b64, branch:cfg.branch };
+  if(cur && !Array.isArray(cur) && cur.sha) body.sha = cur.sha;
+  const r = await gh(`/contents/${path.split("/").map(encodeURIComponent).join("/")}`, { method:"PUT", body:JSON.stringify(body) });
+  if(!r.ok) throw apiErr(r);
+  return r.data;
+}
+function apiErr(r){
+  const m = r.data && r.data.message || "";
+  if(r.status===401) return new Error("Token noto'g'ri yoki muddati tugagan. «Ulanish» bo'limida yangi token kiriting.");
+  if(r.status===403) return new Error("Tokenga ruxsat yetarli emas. Token sozlamalarida Contents va Pages uchun «Read and write» tanlanganini tekshiring.");
+  if(r.status===404) return new Error("Repository topilmadi. Login va repository nomini tekshiring.");
+  if(r.status===409) return new Error("Fayl boshqa joyda o'zgargan. «Saytdan qayta yuklash» ni bosib, qaytadan urinib ko'ring.");
+  return new Error(`GitHub xatosi (${r.status}) ${m}`);
+}
+
+/* ---------- Connect ---------- */
+let connected=false;
+function setConn(on, text){ connected=on; $("#conn").classList.toggle("on",on); $("#connText").textContent=text; $("#newBtn").disabled=!on; $("#reloadBtn").disabled=!on; $("#installBtn").disabled=!on; }
+function status(el, text, kind){ el.textContent=text; el.className="status "+(kind||""); el.hidden=false; }
+async function connect(){
+  cfg = { owner:$("#owner").value.trim(), repo:$("#repo").value.trim(), branch:$("#branch").value.trim()||"main", token:$("#token").value.trim() };
+  if(!cfg.owner||!cfg.repo||!cfg.token){ status($("#connStatus"),"Login, repository nomi va tokenni to'ldiring.","bad"); return; }
+  status($("#connStatus"),"Ulanmoqda…");
+  try{
+    const r = await gh("");
+    if(!r.ok) throw apiErr(r);
+    if(r.data.permissions && !r.data.permissions.push) throw new Error("Bu token bilan repository'ga yozib bo'lmaydi. Contents → Read and write ruxsatini bering.");
+    store.set("cfg", cfg);
+    setConn(true, `${cfg.owner}/${cfg.repo}`);
+    status($("#connStatus"),"Ulandi. Endi «Kinolar» bo'limiga o'ting.","ok");
+    await loadFilms();
+  }catch(e){ setConn(false,"GitHub'ga ulanmagan"); status($("#connStatus"), e.message, "bad"); }
+}
+$("#connectBtn").onclick = connect;
+$("#forgetBtn").onclick = ()=>{ cfg.token=""; $("#token").value=""; store.set("cfg", Object.assign({},cfg,{token:""})); setConn(false,"GitHub'ga ulanmagan"); toast("Kalit bu qurilmadan o'chirildi"); };
+
+/* ---------- Films data ---------- */
+let data=null, saved="", fileSha=null, pendingPosters={}; // path -> b64
+const PALETTES=[["#3a1c71","#d76d77","#ffaf7b"],["#0f2027","#2c5364","#7fd3ff"],["#134e2a","#5f9e3b","#f6e27a"],["#2b1638","#8e4a8a","#e9c7e6"],["#3d2a0f","#c27a2c","#ffd98a"],["#1d2b4a","#5a7bb5","#e6f0ff"],["#0c3b3a","#2a9d8f","#e9f5b0"],["#0b1d51","#1f6fb2","#9be7ff"],["#1a1a1a","#7a1f2b","#ff7a59"],["#4a1d0f","#e2582b","#ffe066"],["#120c3a","#4b3b9e","#c0b5ff"]];
+function parseFilmsJs(text){
+  const w={}; new Function("window", text)(w);
+  return { SITE:w.SITE||{name:"Ekran TV"}, FILMS:w.FILMS||[], CHANNELS:w.CHANNELS||[], SCHEDULE:w.SCHEDULE||{startHour:6,breakMinutes:12}, LIVE_CHANNELS:w.LIVE_CHANNELS||[] };
+}
+function buildFilmsJs(d){
+  const j = v => JSON.stringify(v, null, 2);
+  const films = "[\n" + d.FILMS.map(f=>"  "+JSON.stringify(f)).join(",\n") + "\n]";
+  return `/* ================================================================
+   EKRAN TV — KINOLAR VA KANALLAR RO'YXATI
+   Bu faylni Boshqaruv paneli (admin.html) yangilaydi.
+   Qo'lda tahrirlasangiz, vergul va qo'shtirnoqlarni o'chirib yubormang.
+   Maydonlar: id, title, genre, year, duration (daqiqa), age, rating,
+   youtube (havola), video (bulutdagi video havolasi), poster (rasm yo'li), colors, description.
+   ================================================================ */
+
+window.SITE = ${j(d.SITE)};
+
+window.FILMS = ${films};
+
+/* Telekanallar: genres — kanaldagi janrlar (null = hammasi) */
+window.CHANNELS = ${j(d.CHANNELS)};
+
+window.SCHEDULE = ${j(d.SCHEDULE)};
+
+/* Hamkor kanallar: faqat egasidan ruxsat olinganlarini qo'shing.
+   stream — rasmiy .m3u8 havola (https://), yoki youtube — rasmiy jonli efir. */
+window.LIVE_CHANNELS = ${j(d.LIVE_CHANNELS)};
+`;
+}
+async function loadFilms(){
+  $("#filmsSub").textContent="Yuklanmoqda…";
+  try{
+    const f = await getFile("data/films.js");
+    if(!f){ data={SITE:{name:"Ekran TV",heroFilmId:null},FILMS:[],CHANNELS:[],SCHEDULE:{startHour:6,breakMinutes:12},LIVE_CHANNELS:[]}; fileSha=null; $("#filmsSub").textContent="Saytda hali kinolar fayli yo'q. Avval «Saytni o'rnatish» bo'limidan foydalaning yoki yangi kino qo'shing."; }
+    else { data=parseFilmsJs(textFromB64(f.content)); fileSha=f.sha; }
+    saved = JSON.stringify(data); pendingPosters={};
+    renderFilms(); updateBar();
+  }catch(e){ $("#filmsSub").textContent = "Kinolar faylini o'qib bo'lmadi: " + e.message; }
+}
+$("#reloadBtn").onclick = loadFilms;
+
+const ytId = v => { if(!v) return ""; v=String(v).trim(); if(/^[\w-]{11}$/.test(v)) return v; const m=v.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/); return m?m[1]:""; };
+const fmtDur = m => (m>=60?`${Math.floor(m/60)} soat `:"") + `${m%60} daq`;
+const savedFilm = id => JSON.parse(saved).FILMS.find(f=>f.id===id);
+function thumbStyle(f){
+  const c=f.colors||PALETTES[0];
+  const poster = pendingPosters[f.poster] ? `data:image/jpeg;base64,${pendingPosters[f.poster]}` : (f.poster ? `https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}/${f.poster}` : (ytId(f.youtube)?`https://i.ytimg.com/vi/${ytId(f.youtube)}/hqdefault.jpg`:""));
+  return `--c1:${c[0]};--c2:${c[1]};${poster?`background-image:url('${poster}'),linear-gradient(160deg,${c[0]},${c[1]})`:""}`;
+}
+let confirmDel=null;
+function renderFilms(){
+  if(!data) return;
+  const n=data.FILMS.length, withVid=data.FILMS.filter(f=>ytId(f.youtube)||videoSrc(f.video)).length;
+  $("#filmsSub").textContent = `${n} ta kino, ${withVid} tasiga video ulangan.`;
+  $("#genreList").innerHTML = [...new Set(data.FILMS.map(f=>f.genre).concat(["Drama","Komediya","Melodrama","Triller","Oilaviy","Tarixiy","Fantastika","Sarguzasht","Animatsiya","Hujjatli"]))].map(g=>`<option value="${esc(g)}">`).join("");
+  const sorted=[...data.FILMS].sort((a,b)=>b.id-a.id);
+  $("#films").innerHTML = sorted.map(f=>{
+    const ch = JSON.stringify(savedFilm(f.id))!==JSON.stringify(f);
+    const hero = data.SITE.heroFilmId===f.id;
+    return `<div class="film ${ch?"changed":""}"><div class="thumb" style="${thumbStyle(f)}"></div><div style="min-width:0"><b>${esc(f.title)}</b><small>${esc(f.genre)} · ${f.year||"—"} · ${fmtDur(f.duration||0)}${hero?" · ★ bosh sahifada":""}</small>${(ytId(f.youtube)||videoSrc(f.video))?'<span class="pill ok">● Video ulangan</span>':'<span class="pill no">Tez orada</span>'}${ch?' <span class="pill no" style="color:var(--accent)">Saqlanmagan</span>':""}<div class="acts"><button class="btn btn-ghost btn-sm" type="button" data-edit="${f.id}">Tahrirlash</button><button class="btn btn-danger btn-sm" type="button" data-del="${f.id}">${confirmDel===f.id?"Ha, o'chirilsin":"O'chirish"}</button></div></div></div>`;
+  }).join("") || `<p class="muted">Hali kino yo'q. «＋ Yangi kino» tugmasini bosing.</p>`;
+}
+$("#films").addEventListener("click", e=>{
+  const ed=e.target.closest("[data-edit]"); if(ed){ openEditor(+ed.dataset.edit); return; }
+  const dl=e.target.closest("[data-del]"); if(dl){
+    const id=+dl.dataset.del;
+    if(confirmDel!==id){ confirmDel=id; renderFilms(); setTimeout(()=>{ if(confirmDel===id){ confirmDel=null; renderFilms(); } },4000); return; }
+    confirmDel=null; data.FILMS=data.FILMS.filter(f=>f.id!==id); if(data.SITE.heroFilmId===id) data.SITE.heroFilmId=data.FILMS[0]?.id??null;
+    renderFilms(); updateBar(); toast("Kino o'chirildi. «Saytga chiqarish» ni bosing.");
+  }
+});
+
+/* ---------- Editor ---------- */
+let editId=null, posterB64=null;
+function openEditor(id){
+  editId=id; posterB64=null; $("#edErr").hidden=true; $("#fPoster").value="";
+  const f = id!=null ? data.FILMS.find(x=>x.id===id) : null;
+  $("#edTitle").textContent = f ? "Kinoni tahrirlash" : "Yangi kino";
+  $("#fYt").value=f?.youtube||f?.video||""; $("#fTitle").value=f?.title||""; $("#fGenre").value=f?.genre||"";
+  $("#fYear").value=f?.year||new Date().getFullYear(); const d=f?.duration??90; $("#fH").value=Math.floor(d/60); $("#fM").value=d%60;
+  $("#fAge").value=f?.age||"12+"; $("#fRating").value=f?.rating??8.0; $("#fDesc").value=f?.description||"";
+  $("#fHero").checked = f ? data.SITE.heroFilmId===f.id : false;
+  const pp=$("#posterPrev"); if(f?.poster){ pp.src = pendingPosters[f.poster]?`data:image/jpeg;base64,${pendingPosters[f.poster]}`:`https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}/${f.poster}`; pp.hidden=false; } else pp.hidden=true;
+  ytPreview(); $("#editor").hidden=false; $("#editor").scrollIntoView({behavior:"smooth",block:"start"}); $("#fYt").focus();
+}
+$("#newBtn").onclick=()=>openEditor(null);
+$("#edCancel").onclick=()=>{ $("#editor").hidden=true; };
+function videoSrc(v){
+  if(!v) return null; v=String(v).trim(); if(!/^https:\/\//i.test(v)) return null;
+  let u; try{ u=new URL(v); }catch(e){ return null; }
+  const path=u.pathname.toLowerCase(), host=u.hostname.toLowerCase(); let m;
+  if(/\.m3u8$/.test(path)) return {kind:"hls",url:v,label:"Video oqimi (m3u8)"};
+  if(/\.(mp4|m4v|webm|mov)$/.test(path)) return {kind:"file",url:v,label:"Video fayl"};
+  if((m=v.match(/vimeo\.com\/(?:video\/)?(\d+)/))) return {kind:"embed",url:v,label:"Vimeo videosi"};
+  if(host==="iframe.mediadelivery.net") return {kind:"embed",url:v,label:"Bunny Stream videosi"};
+  if(host==="iframe.videodelivery.net"||host.endsWith(".cloudflarestream.com")) return {kind:"embed",url:v,label:"Cloudflare Stream videosi"};
+  return null;
+}
+function normalizeLink(v){
+  v=String(v||"").trim();
+  if(/dropbox\.com\//i.test(v)){ try{ const u=new URL(v); u.searchParams.delete("dl"); u.searchParams.set("raw","1"); return u.toString(); }catch(e){} }
+  return v;
+}
+function linkProblem(v){
+  if(!v) return "";
+  if(ytId(v)||videoSrc(v)) return "";
+  if(/drive\.google\.com|docs\.google\.com/i.test(v)) return "Google Drive havolasi saytda ishlamaydi. Videoni YouTube, Bunny Stream yoki boshqa bulutga yuklang.";
+  if(/^http:\/\//i.test(v)) return "Havola https:// bilan boshlanishi kerak (http:// ishlamaydi).";
+  return "Bu havola bilan video ochilmaydi. YouTube, Bunny Stream, Vimeo yoki .mp4 bilan tugaydigan fayl havolasini qo'ying.";
+}
+let probe=null;
+function ytPreview(){
+  const v=normalizeLink($("#fYt").value), id=ytId(v), vs=id?null:videoSrc(v);
+  if(probe){ probe.removeAttribute("src"); probe.load(); probe=null; }
+  if(!v){ $("#ytPrev").hidden=true; return; }
+  $("#ytPrev").hidden=false; $("#ytImg").hidden=true;
+  if(id){ $("#ytImg").src=`https://i.ytimg.com/vi/${id}/hqdefault.jpg`; $("#ytImg").hidden=false; $("#ytTxt").textContent=`YouTube videosi topildi (ID: ${id}). Rasm chiqmasa, havolani tekshiring.`; return; }
+  if(!vs){ $("#ytTxt").textContent=linkProblem(v); return; }
+  $("#ytTxt").textContent=`${vs.label} qabul qilindi.`;
+  if(vs.kind==="file"){
+    $("#ytTxt").textContent=`${vs.label}: tekshirilmoqda…`;
+    probe=document.createElement("video"); probe.preload="metadata"; probe.muted=true;
+    probe.onloadedmetadata=()=>{ const d=Math.round((probe.duration||0)/60); if(d>0){ $("#fH").value=Math.floor(d/60); $("#fM").value=d%60; } $("#ytTxt").textContent=`Video ochildi ✓ Davomiyligi: ${Math.floor(d/60)} soat ${d%60} daq (avtomatik yozildi).`; };
+    probe.onerror=()=>{ $("#ytTxt").textContent="Video faylni ochib bo'lmadi. Fayl ommaviy (public) ekanini va havola to'g'riligini tekshiring."; };
+    probe.src=v;
+  }
+}
+$("#fYt").addEventListener("input", ytPreview);
+$("#fPoster").addEventListener("change", async e=>{
+  const file=e.target.files[0]; if(!file) return;
+  try{
+    const img = await createImageBitmap(file);
+    const W=600,H=900, cv=document.createElement("canvas"); cv.width=W; cv.height=H; const ctx=cv.getContext("2d");
+    const s=Math.max(W/img.width,H/img.height), w=img.width*s, h=img.height*s; ctx.drawImage(img,(W-w)/2,(H-h)/2,w,h);
+    const url=cv.toDataURL("image/jpeg",0.85); posterB64=url.split(",")[1]; $("#posterPrev").src=url; $("#posterPrev").hidden=false;
+  }catch(er){ posterB64=null; toast("Rasmni ochib bo'lmadi. Boshqa rasm tanlang (JPG yoki PNG)."); }
+});
+const slug = s => s.toLowerCase().replace(/[ʻʼ'‘’`]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40) || "kino";
+$("#editor").addEventListener("submit", e=>{
+  e.preventDefault();
+  const title=$("#fTitle").value.trim(), genre=$("#fGenre").value.trim();
+  const link=normalizeLink($("#fYt").value);
+  const err = !title ? "Kino nomini yozing." : !genre ? "Janrni yozing yoki ro'yxatdan tanlang." : linkProblem(link);
+  if(err){ status($("#edErr"),err,"bad"); return; }
+  const dur = Math.max(1, (+$("#fH").value||0)*60 + (+$("#fM").value||0));
+  let f = editId!=null ? data.FILMS.find(x=>x.id===editId) : null;
+  if(!f){ const id=Math.max(0,...data.FILMS.map(x=>+x.id||0))+1; f={ id, title:"", genre:"", year:0, duration:0, age:"12+", rating:8, youtube:"", video:"", poster:"", colors:PALETTES[id%PALETTES.length], description:"" }; data.FILMS.push(f); }
+  Object.assign(f, { title, genre, year:+$("#fYear").value||new Date().getFullYear(), duration:dur, age:$("#fAge").value, rating:Math.round((+$("#fRating").value||0)*10)/10, youtube:ytId(link)?link:"", video:ytId(link)?"":link, description:$("#fDesc").value.trim() });
+  if(posterB64){ const p=`posters/${slug(title)}-${f.id}.jpg`; pendingPosters[p]=posterB64; f.poster=p; }
+  if($("#fHero").checked) data.SITE.heroFilmId=f.id; else if(data.SITE.heroFilmId===f.id) data.SITE.heroFilmId=null;
+  if(data.SITE.heroFilmId==null && data.FILMS.length) data.SITE.heroFilmId=f.id;
+  $("#editor").hidden=true; renderFilms(); updateBar(); toast("Saqlandi. Saytda ko'rinishi uchun «Saytga chiqarish» ni bosing.");
+});
+
+/* ---------- Publish ---------- */
+function countChanges(){
+  if(!data) return 0;
+  const a=JSON.parse(saved); let n=0;
+  const ids=new Set(a.FILMS.map(f=>f.id).concat(data.FILMS.map(f=>f.id)));
+  ids.forEach(id=>{ if(JSON.stringify(a.FILMS.find(f=>f.id===id))!==JSON.stringify(data.FILMS.find(f=>f.id===id))) n++; });
+  if(n===0 && (a.SITE.heroFilmId!==data.SITE.heroFilmId || Object.keys(pendingPosters).length)) n=1;
+  return n;
+}
+function updateBar(){ const n=countChanges(); $("#publishBar").hidden=n===0; $("#pubText").textContent=`${n} ta saqlanmagan o'zgarish bor. Saytda ko'rinishi uchun saytga chiqaring.`; }
+$("#discardBtn").onclick=()=>{ data=JSON.parse(saved); pendingPosters={}; renderFilms(); updateBar(); toast("O'zgarishlar bekor qilindi"); };
+$("#publishBtn").onclick=async()=>{
+  const b=$("#publishBtn"); b.disabled=true; b.textContent="Chiqarilmoqda…";
+  try{
+    for(const [p,b64] of Object.entries(pendingPosters)){ if(data.FILMS.some(f=>f.poster===p)) await putFile(p,b64,"Poster: "+p); }
+    const res = await putFile("data/films.js", b64FromText(buildFilmsJs(data)), "Kinolar ro'yxati yangilandi");
+    fileSha = res.content && res.content.sha;
+    saved=JSON.stringify(data); pendingPosters={}; renderFilms(); updateBar();
+    toast("Saytga chiqarildi! 1–2 daqiqada saytda ko'rinadi.", 4500);
+  }catch(e){ toast(e.message, 6000); }
+  b.disabled=false; b.textContent="Saytga chiqarish";
+};
+addEventListener("beforeunload", e=>{ if(countChanges()){ e.preventDefault(); e.returnValue=""; } });
+
+/* ---------- Install ---------- */
+if(!SITE_FILES){ $("#installUnavailable").hidden=false; $("#installBox").hidden=true; }
+else {
+  const names=Object.keys(SITE_FILES);
+  $("#installList").textContent = `${names.length} ta fayl yuklanadi: ${names.join(", ")}.`;
+}
+function log(m){ const l=$("#installLog"); l.hidden=false; l.textContent+=m+"\n"; l.scrollTop=l.scrollHeight; }
+$("#installBtn").onclick=async()=>{
+  if(!SITE_FILES) return;
+  const b=$("#installBtn"); b.disabled=true; $("#installLog").textContent="";
+  try{
+    if($("#optStray").checked){
+      const s=await getFile("ekran-tv").catch(()=>null);
+      if(s && !Array.isArray(s) && s.type==="file"){
+        const r=await gh("/contents/ekran-tv",{method:"DELETE",body:JSON.stringify({message:"Ortiqcha fayl olib tashlandi",sha:s.sha,branch:cfg.branch})});
+        log(r.ok?"✓ ortiqcha «ekran-tv» fayli olib tashlandi":"• ortiqcha faylni olib tashlab bo'lmadi, davom etyapman");
+      }
+    }
+    for(const [path,file] of Object.entries(SITE_FILES)){
+      if(path==="data/films.js" && !$("#optFilms").checked){ const ex=await getFile(path).catch(()=>null); if(ex){ log("• data/films.js — mavjud, o'zgartirilmadi"); continue; } }
+      log("… "+path); await putFile(path, file.b64 ? file.b64 : b64FromText(file.text), "Sayt fayli: "+path); log("✓ "+path);
+    }
+    log("… GitHub Pages yoqilmoqda");
+    let r=await gh("/pages",{method:"POST",body:JSON.stringify({build_type:"legacy",source:{branch:cfg.branch,path:"/"}})});
+    if(!r.ok && r.status!==409) log("• Pages'ni avtomatik yoqib bo'lmadi ("+r.status+"). Repository → Settings → Pages bo'limida main / root ni tanlab Save bosing.");
+    const g=await gh("/pages"); const url=(g.ok&&g.data.html_url)||`https://${cfg.owner}.github.io/${cfg.repo}/`;
+    log("✓ Tayyor!"); $("#siteLink").href=url; $("#siteLink").textContent=url; $("#siteBox").hidden=false;
+    await loadFilms();
+  }catch(e){ log("✗ "+e.message); }
+  b.disabled=false;
+};
+
+/* ---------- Start ---------- */
+if(cfg.token){ connect(); } else showTab("settings");
+})();
+</script>
+</body>
+</html>
