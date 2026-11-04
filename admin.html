@@ -98,7 +98,7 @@ code{font-family:var(--f-mono);font-size:13px;background:var(--surface-2);paddin
 <main class="wrap">
   <nav class="tabs" role="tablist">
     <button type="button" role="tab" data-tab="films" aria-selected="true">Kinolar</button>
-    <button type="button" role="tab" data-tab="install" id="installTabBtn">Saytni o'rnatish</button>
+    <button type="button" role="tab" data-tab="install" id="installTabBtn">Saytni yangilash</button>
     <button type="button" role="tab" data-tab="settings">Ulanish</button>
   </nav>
 
@@ -185,13 +185,13 @@ code{font-family:var(--f-mono);font-size:13px;background:var(--surface-2);paddin
   <!-- O'RNATISH -->
   <section data-panel="install" class="stack" hidden>
     <div class="card stack">
-      <div><h2>Saytni GitHub'ga o'rnatish</h2><p class="muted" style="margin:6px 0 0">Saytning barcha fayllarini repository'ga yuklaydi va GitHub Pages'ni yoqadi. Qo'lda hech narsa yuklash shart emas.</p></div>
+      <div><h2>Saytni o'rnatish va yangilash</h2><p class="muted" style="margin:6px 0 0">Saytning barcha fayllarini repository'ga yuklaydi va GitHub Pages'ni yoqadi. Qo'lda hech narsa yuklash shart emas.</p></div>
       <div id="installUnavailable" class="status" hidden>Bu bo'lim faqat kompyuteringizdagi <code>ekran-tv-panel.html</code> faylida ishlaydi.</div>
       <div id="installBox" class="stack">
         <p class="muted" style="margin:0" id="installList"></p>
         <label class="row" style="gap:8px;font-weight:600"><input type="checkbox" id="optFilms"> Kinolar ro'yxatini (films.js) ham almashtirish <span class="muted" style="font-weight:500">— faqat birinchi o'rnatishda belgilang</span></label>
         <label class="row" style="gap:8px;font-weight:600"><input type="checkbox" id="optStray" checked> Avval xato yuklangan «ekran-tv» nomli ortiqcha faylni o'chirish</label>
-        <div class="row"><button class="btn btn-accent" type="button" id="installBtn" disabled>Saytni o'rnatish</button></div>
+        <div class="row"><button class="btn btn-accent" type="button" id="installBtn" disabled>Saytni yangilash</button></div>
         <div class="log" id="installLog" hidden></div>
         <div class="status ok" id="siteBox" hidden>Sayt manzili: <a class="site-link" id="siteLink" target="_blank" rel="noopener"></a><br><span class="muted">Birinchi marta ochilishiga 1–3 daqiqa vaqt ketadi.</span></div>
       </div>
