@@ -1,7 +1,7 @@
 {
   "name": "Ekran TV",
   "short_name": "Ekran TV",
-  "description": "O'zbek kinolari va 24/7 jonli efir kanallari",
+  "description": "O'zbek kinolarini onlayn tomosha qiling",
   "lang": "uz",
   "start_url": "./",
   "scope": "./",
