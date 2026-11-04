@@ -10,6 +10,7 @@ const fmtDur = m => (m >= 60 ? `${Math.floor(m / 60)} soat ` : "") + `${m % 60} 
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const SITE = window.SITE || { name: "Ekran TV" };
+const LIVE_ON = !!document.getElementById("efir");   // jonli efir bo'limi sahifada bormi
 const SCHED = Object.assign({ startHour: 6, breakMinutes: 12 }, window.SCHEDULE || {});
 
 /* ---------- YouTube havolasidan ID ajratish ---------- */
@@ -196,7 +197,7 @@ function selectChannel(id, scroll) {
 }
 let liveFilm;
 function renderLive() {
-  if (!chan) return;
+  if (!chan || !LIVE_ON) return;
   ensureDays();
   const day = DAYS[chan.id], i = slotIdx(day), s = day[i], n = nowMin();
   liveFilm = s.f;
@@ -220,6 +221,7 @@ function renderLive() {
   const t = tashParts(), wd = new Date(Date.UTC(t.y, t.mo - 1, t.d)).getUTCDay();
   $("#epgDate").textContent = `${weekdays[wd]}, ${t.d}-${months[t.mo - 1]}`;
 }
+if (LIVE_ON) {
 $("#chanGrid").addEventListener("click", e => {
   const x = e.target.closest("[data-ext]"); if (x) { openExternal(EXT.find(c => c.id === x.dataset.ext)); return; }
   const b = e.target.closest("[data-ch]"); if (b) selectChannel(b.dataset.ch, true);
@@ -231,6 +233,7 @@ renderLive(); tickClock();
 setInterval(tickClock, 1000); setInterval(renderLive, 30000);
 $("#liveScreen").onclick = () => openPlayer(liveFilm, true);
 $("#liveScreen").onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPlayer(liveFilm, true); } };
+}
 
 /* ---------- Animatsiyali fon (video yo'q paytda) ---------- */
 function filmPainter(canvas, getFilm) {
@@ -252,9 +255,9 @@ function filmPainter(canvas, getFilm) {
     t++;
   };
 }
-const liveFrame = filmPainter($("#liveCanvas"), () => liveFilm);
+const liveFrame = LIVE_ON ? filmPainter($("#liveCanvas"), () => liveFilm) : () => {};
 const pFrame = filmPainter($("#pCanvas"), () => pFilm);
-function loop() { if ($("#liveThumb").hidden) liveFrame(); if (!$("#modal").hidden && !ytPlayer && !videoEl) pFrame(); if (!reduce) requestAnimationFrame(loop); }
+function loop() { if (LIVE_ON && $("#liveThumb").hidden) liveFrame(); if (!$("#modal").hidden && !ytPlayer && !videoEl) pFrame(); if (!reduce) requestAnimationFrame(loop); }
 requestAnimationFrame(loop);
 
 /* ---------- YouTube pleyer ---------- */
@@ -449,7 +452,7 @@ addEventListener("hashchange", routeHash);
 routeHash();
 
 /* ---------- Menyu belgisi ---------- */
-const navIds = ["bosh", "efir", "kanallar", "kinolar", "dastur"];
+const navIds = ["bosh", "kinolar", "haqida"];
 addEventListener("scroll", () => {
   let cur = "bosh";
   navIds.forEach(id => { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top < 140) cur = id; });
