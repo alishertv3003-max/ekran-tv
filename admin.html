@@ -129,6 +129,25 @@ code{font-family:var(--f-mono);font-size:13px;background:var(--surface-2);paddin
       </div>
       <div class="status" id="connStatus" hidden></div>
     </div>
+
+    <div class="card stack">
+      <div><h2>Video bulut (Bunny Stream)</h2><p class="muted" style="margin:6px 0 0">Kino fayllarini kompyuterdan to'g'ridan-to'g'ri yuklash uchun. Videolar Bunny Stream'da saqlanadi va saytda reklamasiz ochiladi. Bunny pullik xizmat, to'lov ishlatilgan hajmga qarab olinadi.</p></div>
+      <div class="grid2">
+        <label class="f">Library ID<input type="text" id="bLib" autocomplete="off" spellcheck="false" inputmode="numeric" placeholder="123456"></label>
+        <label class="f">API Key<input type="password" id="bKey" autocomplete="off" spellcheck="false"><span class="hint">Bu ham kalit: hech kimga bermang.</span></label>
+      </div>
+      <details>
+        <summary>Bunny Stream qanday ulanadi (5 daqiqa)</summary>
+        <ol>
+          <li><b>bunny.net</b> saytida ro'yxatdan o'ting (to'lov kartasi so'raladi).</li>
+          <li>Chap menyuda <b>Stream</b> → <b>Add Video Library</b>. Nomi: <code>ekran-tv</code>. Mintaqalardan Yevropani tanlang → <b>Add</b>.</li>
+          <li>Ochilgan kutubxonada <b>API</b> bo'limiga o'ting. U yerdagi <b>Video Library ID</b> va <b>API Key</b> ni nusxalab, shu yerga qo'ying.</li>
+          <li>Tavsiya: kutubxonaning <b>Security</b> bo'limida <b>Allowed Referrers</b> ga <code>alishertv3003-max.github.io</code> (keyinroq domeningizni ham) yozing. Shunda videolaringiz faqat sizning saytingizda ochiladi.</li>
+        </ol>
+      </details>
+      <div class="row"><button class="btn btn-accent" type="button" id="bunnyBtn">Bunny'ni tekshirish va saqlash</button></div>
+      <div class="status" id="bunnyStatus" hidden></div>
+    </div>
   </section>
 
   <!-- KINOLAR -->
@@ -143,19 +162,28 @@ code{font-family:var(--f-mono);font-size:13px;background:var(--surface-2);paddin
 
     <form class="card stack editor" id="editor" hidden novalidate>
       <div class="row" style="justify-content:space-between"><h3 id="edTitle">Yangi kino</h3><button class="btn btn-ghost btn-sm" type="button" id="edCancel">Bekor qilish</button></div>
-      <label class="f">Video havolasi<input type="url" id="fYt" placeholder="https://..." autocomplete="off"><span class="hint">YouTube havolasi, bulutdagi video fayl (.mp4) havolasi yoki Bunny Stream / Vimeo havolasi. Bo'sh qolsa, kino «Tez orada» bo'lib turadi.</span></label>
+      <label class="f">Video havolasi<input type="url" id="fYt" placeholder="https://..." autocomplete="off"><span class="hint">YouTube, Telegram (ochiq kanal), Wistia, Vimeo, Bunny Stream havolasi yoki bulutdagi video fayl (.mp4) havolasi. Bo'sh qolsa, kino «Tez orada» bo'lib turadi.</span></label>
       <details>
         <summary>Qaysi bulutlar ishlaydi?</summary>
         <ol>
           <li><b>YouTube</b> — bepul. Videoni «Ro'yxatda yo'q» (Unlisted) qilib yuklang va havolasini qo'ying.</li>
           <li><b>Bunny Stream</b> (bunny.net) — arzon, reklamasiz, tez. Video → <i>Embed</i> havolasini qo'ying (<code>iframe.mediadelivery.net/embed/...</code>).</li>
           <li><b>Vimeo</b> — video sozlamalarida joylashtirishga ruxsat bering, so'ng video havolasini qo'ying.</li>
-          <li><b>Har qanday bulutdagi .mp4 fayl</b> (Cloudflare R2, Backblaze B2, o'z serveringiz) — fayl <i>ommaviy</i> bo'lishi va havola <code>.mp4</code> bilan tugashi kerak.</li>
+          <li><b>Telegram</b> — faqat <i>ochiq</i> kanal posti. Postdagi «Copy Post Link» (havolani nusxalash) orqali <code>t.me/kanalnomi/123</code> havolasini oling. Katta videolar ba'zan saytda faqat oldindan ko'rinish bilan chiqadi va «Telegram'da ochish» tugmasi ko'rsatiladi.</li>
+          <li><b>Wistia</b> — bepul 25 GB. Videoni yuklang va uning sahifa havolasini (<code>....wistia.com/medias/...</code>) qo'ying.</li>
+          <li><b>Har qanday bulutdagi .mp4 fayl</b> (Backblaze B2, o'z serveringiz va boshqalar) — fayl <i>ommaviy</i> bo'lishi va havola <code>.mp4</code> bilan tugashi kerak.</li>
           <li><b>Dropbox</b> — sinov uchun yaraydi, lekin ko'p tomoshabin bo'lsa Dropbox havolani bloklaydi.</li>
           <li><b>Google Drive ishlamaydi</b>: u videoni boshqa saytda ko'rsatishga ruxsat bermaydi va ko'p ko'rilganda bloklaydi.</li>
         </ol>
       </details>
       <div class="ytprev" id="ytPrev" hidden><img id="ytImg" alt="Video rasmi"><span id="ytTxt"></span></div>
+      <div class="upl stack" style="gap:10px;padding:14px;border:1px dashed var(--line);border-radius:12px">
+        <label class="f">yoki kino faylini kompyuterdan yuklang<input type="file" id="fVideo" accept="video/*"><span class="hint" id="uplHint"></span></label>
+        <label class="row" style="gap:8px;font-weight:600;font-size:14px"><input type="checkbox" id="fRights"> Bu kino menga tegishli yoki uni ko'rsatishga ruxsatim bor</label>
+        <label class="f" id="destWrap" hidden>Qayerga yuklash<select id="uplDest"></select></label>
+        <div class="row"><button class="btn btn-ghost btn-sm" type="button" id="uplBtn" disabled>Yuklashni boshlash</button><button class="btn btn-danger btn-sm" type="button" id="uplCancel" hidden>To'xtatish</button><span class="muted" id="uplPct" style="font-size:13px;font-family:var(--f-mono)"></span></div>
+        <div class="bar-up" id="uplBar" hidden style="height:8px;border-radius:8px;background:var(--surface-2);overflow:hidden"><i style="display:block;height:100%;width:0;background:var(--accent);transition:width .3s"></i></div>
+      </div>
       <div class="grid2">
         <label class="f">Kino nomi *<input type="text" id="fTitle" required></label>
         <label class="f">Janr *<input type="text" id="fGenre" list="genreList" required><datalist id="genreList"></datalist></label>
@@ -365,7 +393,7 @@ $("#films").addEventListener("click", e=>{
 /* ---------- Editor ---------- */
 let editId=null, posterB64=null;
 function openEditor(id){
-  editId=id; posterB64=null; $("#edErr").hidden=true; $("#fPoster").value="";
+  editId=id; posterB64=null; $("#edErr").hidden=true; $("#fPoster").value=""; $("#fVideo").value=""; $("#fRights").checked=false; $("#uplBar").hidden=true; $("#uplPct").textContent=""; if(typeof syncUpl==="function") syncUpl();
   const f = id!=null ? data.FILMS.find(x=>x.id===id) : null;
   $("#edTitle").textContent = f ? "Kinoni tahrirlash" : "Yangi kino";
   $("#fYt").value=f?.youtube||f?.video||""; $("#fTitle").value=f?.title||""; $("#fGenre").value=f?.genre||"";
@@ -386,6 +414,8 @@ function videoSrc(v){
   if((m=v.match(/vimeo\.com\/(?:video\/)?(\d+)/))) return {kind:"embed",url:v,label:"Vimeo videosi"};
   if(host==="iframe.mediadelivery.net") return {kind:"embed",url:v,label:"Bunny Stream videosi"};
   if(host==="iframe.videodelivery.net"||host.endsWith(".cloudflarestream.com")) return {kind:"embed",url:v,label:"Cloudflare Stream videosi"};
+  if((host==="t.me"||host==="telegram.me") && /^\/(?:s\/)?[A-Za-z0-9_]{4,}\/\d+\/?$/.test(u.pathname)) return {kind:"embed",url:v,label:"Telegram kanal posti"};
+  if((host.endsWith("wistia.com")||host.endsWith("wistia.net")||host==="wi.st") && /(?:medias|iframe)\/[a-z0-9]{6,}/i.test(v)) return {kind:"embed",url:v,label:"Wistia videosi"};
   return null;
 }
 function normalizeLink(v){
@@ -396,9 +426,10 @@ function normalizeLink(v){
 function linkProblem(v){
   if(!v) return "";
   if(ytId(v)||videoSrc(v)) return "";
+  if(/(^|\/\/)(t|telegram)\.me\/c\//i.test(v)) return "Bu yopiq (private) kanal posti. Faqat ochiq kanal postlari saytda ko'rinadi: havola t.me/kanalnomi/123 ko'rinishida bo'lishi kerak.";
   if(/drive\.google\.com|docs\.google\.com/i.test(v)) return "Google Drive havolasi saytda ishlamaydi. Videoni YouTube, Bunny Stream yoki boshqa bulutga yuklang.";
   if(/^http:\/\//i.test(v)) return "Havola https:// bilan boshlanishi kerak (http:// ishlamaydi).";
-  return "Bu havola bilan video ochilmaydi. YouTube, Bunny Stream, Vimeo yoki .mp4 bilan tugaydigan fayl havolasini qo'ying.";
+  return "Bu havola bilan video ochilmaydi. YouTube, Wistia, Vimeo, Bunny Stream yoki .mp4 bilan tugaydigan fayl havolasini qo'ying.";
 }
 let probe=null;
 function ytPreview(){
@@ -466,7 +497,94 @@ $("#publishBtn").onclick=async()=>{
   }catch(e){ toast(e.message, 6000); }
   b.disabled=false; b.textContent="Saytga chiqarish";
 };
-addEventListener("beforeunload", e=>{ if(countChanges()){ e.preventDefault(); e.returnValue=""; } });
+addEventListener("beforeunload", e=>{ if(countChanges()||uploading){ e.preventDefault(); e.returnValue=""; } });
+
+/* ---------- Bunny Stream: to'g'ridan-to'g'ri yuklash ---------- */
+let bunny = Object.assign({ lib:"", key:"" }, store.get("bunny",{}));
+$("#bLib").value=bunny.lib; $("#bKey").value=bunny.key;
+const BUNNY="https://video.bunnycdn.com";
+async function bunnyApi(path, opts={}){
+  let r;
+  try{ r=await fetch(`${BUNNY}/library/${encodeURIComponent(bunny.lib)}${path}`, Object.assign({}, opts, { headers:Object.assign({ "AccessKey":bunny.key, "Accept":"application/json" }, opts.body?{"Content-Type":"application/json"}:{}) })); }
+  catch(e){ throw new Error("Bunny bilan bog'lanib bo'lmadi. Internetni tekshiring yoki videoni bunny.net saytida yuklab, havolasini qo'ying."); }
+  let d=null; try{ d=await r.json(); }catch(e){}
+  if(r.status===401||r.status===403) throw new Error("Bunny API kaliti yoki Library ID noto'g'ri. Ularni kutubxonaning API bo'limidan qaytadan nusxalang.");
+  if(r.status===404) throw new Error("Bunny kutubxonasi topilmadi. Library ID ni tekshiring.");
+  if(!r.ok) throw new Error(`Bunny xatosi (${r.status})`);
+  return d;
+}
+$("#bunnyBtn").onclick=async()=>{
+  bunny={ lib:$("#bLib").value.trim(), key:$("#bKey").value.trim() };
+  if(!/^\d+$/.test(bunny.lib)||!bunny.key){ status($("#bunnyStatus"),"Library ID (faqat raqamlar) va API Key ni to'ldiring.","bad"); return; }
+  status($("#bunnyStatus"),"Tekshirilmoqda…");
+  try{ await bunnyApi("/videos?page=1&itemsPerPage=1"); store.set("bunny",bunny); status($("#bunnyStatus"),"Bunny ulandi. Endi kino qo'shishda faylni to'g'ridan-to'g'ri yuklay olasiz.","ok"); syncUpl(); }
+  catch(e){ status($("#bunnyStatus"),e.message,"bad"); }
+};
+let tusReady;
+function loadTus(){
+  if(tusReady) return tusReady;
+  tusReady=new Promise((res,rej)=>{ if(window.tus) return res(window.tus); const s=document.createElement("script"); s.src="https://cdn.jsdelivr.net/npm/tus-js-client@4.1.0/dist/tus.min.js"; s.onload=()=>res(window.tus); s.onerror=()=>{tusReady=null;rej(new Error("Yuklash kutubxonasini ochib bo'lmadi. Internetni tekshiring."));}; document.head.appendChild(s); });
+  return tusReady;
+}
+async function sha256hex(t){ const b=await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
+let uploading=null;
+const fmtSize=b=> b>1e9?(b/1e9).toFixed(2)+" GB":(b/1e6).toFixed(0)+" MB";
+const dests=()=>[ bunny.lib&&bunny.key ? ["bunny","Bunny Stream"] : null ].filter(Boolean);
+function syncUpl(){
+  const f=$("#fVideo").files[0], d=dests();
+  const sel=$("#uplDest"), cur=sel.value;
+  sel.innerHTML=d.map(([v,t])=>`<option value="${v}">${t}</option>`).join(""); if(d.some(x=>x[0]===cur)) sel.value=cur;
+  $("#destWrap").hidden=d.length<2;
+  $("#uplBtn").disabled = !f || !$("#fRights").checked || !!uploading || !d.length;
+  if(!d.length) $("#uplHint").textContent="Avval «Ulanish» bo'limida Bunny Stream'ni ulang, keyin shu yerdan fayl yuklay olasiz.";
+  else if(f) $("#uplHint").textContent=`Tanlandi: ${f.name} (${fmtSize(f.size)}). Yuklash vaqtida sahifani yopmang.`;
+  else $("#uplHint").textContent=`Fayl ${d.find(x=>x[0]===sel.value)?.[1]||d[0][1]} ga yuklanadi va havolasi yuqoriga o'zi yoziladi.`;
+}
+$("#uplDest").addEventListener("change", syncUpl);
+$("#fVideo").addEventListener("change", ()=>{
+  syncUpl();
+  const f=$("#fVideo").files[0]; if(!f) return;
+  const v=document.createElement("video"); v.preload="metadata"; const u=URL.createObjectURL(f);
+  v.onloadedmetadata=()=>{ const d=Math.round((v.duration||0)/60); if(d>0){ $("#fH").value=Math.floor(d/60); $("#fM").value=d%60; } URL.revokeObjectURL(u); };
+  v.onerror=()=>URL.revokeObjectURL(u); v.src=u;
+  if(!$("#fTitle").value.trim()) $("#fTitle").value=f.name.replace(/\.[^.]+$/,"").replace(/[._-]+/g," ").trim();
+});
+$("#fRights").addEventListener("change", syncUpl);
+function setUplProgress(p,txt){ $("#uplBar").hidden=false; $("#uplBar i").style.width=p+"%"; $("#uplPct").textContent=txt; }
+async function bunnyUpload(file,title){
+  const tus=await loadTus();
+  const vid=await bunnyApi("/videos",{method:"POST",body:JSON.stringify({title})});
+  const exp=Math.floor(Date.now()/1000)+24*3600;
+  const sig=await sha256hex(bunny.lib+bunny.key+exp+vid.guid);
+  await new Promise((res,rej)=>{
+    const up=new tus.Upload(file,{ endpoint:`${BUNNY}/tusupload`, retryDelays:[0,3000,5000,10000,20000,60000], chunkSize:50*1024*1024,
+      headers:{ AuthorizationSignature:sig, AuthorizationExpire:String(exp), VideoId:vid.guid, LibraryId:bunny.lib },
+      metadata:{ filetype:file.type||"video/mp4", title },
+      onError:()=>rej(new Error("Yuklash to'xtadi: internet uzilgan bo'lishi mumkin. Qaytadan «Yuklashni boshlash» ni bosing.")),
+      onProgress:(s,t)=>{ const p=t?Math.floor(s/t*100):0; setUplProgress(p,`${p}% · ${fmtSize(s)} / ${fmtSize(t)}`); },
+      onSuccess:()=>res() });
+    uploading=up; $("#uplCancel").hidden=false;
+    $("#uplCancel").onclick=()=>{ up.abort(true).catch(()=>{}); rej(new Error("Yuklash to'xtatildi.")); };
+    up.findPreviousUploads().then(prev=>{ if(prev.length) up.resumeFromPreviousUpload(prev[0]); up.start(); });
+  });
+  return { link:`https://iframe.mediadelivery.net/embed/${bunny.lib}/${vid.guid}`, note:"Video Bunny'ga yuklandi ✓ Bunny uni bir necha daqiqada qayta ishlaydi. Endi «Saqlash», keyin «Saytga chiqarish» ni bosing." };
+}
+$("#uplBtn").onclick=async()=>{
+  const file=$("#fVideo").files[0]; if(!file) return;
+  const dest=$("#uplDest").value || (dests()[0]||[])[0];
+  if(!dest){ showTab("settings"); return; }
+  $("#edErr").hidden=true; $("#uplBtn").disabled=true; setUplProgress(0,"Tayyorlanmoqda…");
+  try{
+    const title=$("#fTitle").value.trim()||file.name.replace(/\.[^.]+$/,"");
+    const r = await bunnyUpload(file,title);
+    $("#fYt").value=r.link; ytPreview();
+    setUplProgress(100,"✓ Yuklandi");
+    $("#ytTxt").textContent=r.note;
+    $("#fVideo").value="";
+  }catch(e){ status($("#edErr"),e.message,"bad"); setUplProgress(0,""); }
+  uploading=null; $("#uplCancel").hidden=true; syncUpl();
+};
+syncUpl();
 
 /* ---------- Install ---------- */
 if(!SITE_FILES){ $("#installUnavailable").hidden=false; $("#installBox").hidden=true; }
