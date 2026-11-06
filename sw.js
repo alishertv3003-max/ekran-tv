@@ -1,6 +1,6 @@
 /* Ekran TV — oflayn ishlash uchun oddiy kesh.
    Sayt fayllarini o'zgartirganingizda VERSION raqamini oshiring (v2, v3 ...). */
-const VERSION = "ekran-v3";
+const VERSION = "ekran-v6";
 const SHELL = ["./", "index.html", "css/style.css", "js/app.js", "data/films.js", "manifest.webmanifest", "icons/icon-192.png"];
 
 self.addEventListener("install", e => {
