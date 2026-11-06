@@ -38,6 +38,10 @@ function videoSrc(v) {
   if ((m = v.match(/vimeo\.com\/(?:video\/)?(\d+)/))) return { kind: "embed", url: `https://player.vimeo.com/video/${m[1]}`, t: "vimeo" };
   if (host === "iframe.mediadelivery.net") return { kind: "embed", url: v.replace("/play/", "/embed/"), t: "bunny" };
   if (host === "iframe.videodelivery.net" || host.endsWith(".cloudflarestream.com")) return { kind: "embed", url: v, t: "cf" };
+  if ((host === "t.me" || host === "telegram.me") && (m = u.pathname.match(/^\/(?:s\/)?([A-Za-z0-9_]{4,})\/(\d+)\/?$/)))
+    return { kind: "embed", url: `https://t.me/${m[1]}/${m[2]}?embed=1&dark=1`, t: "telegram" };
+  if ((host.endsWith("wistia.com") || host.endsWith("wistia.net") || host === "wi.st") && (m = v.match(/(?:medias|iframe|embed\/medias)\/([a-z0-9]{6,})/i)))
+    return { kind: "embed", url: `https://fast.wistia.net/embed/iframe/${m[1]}`, t: "wistia" };
   return null;
 }
 
@@ -340,15 +344,18 @@ function playEmbed(vs, start) {
   const sep = url.includes("?") ? "&" : "?";
   if (vs.t === "vimeo") url += `${sep}autoplay=1` + (start > 0 ? `#t=${Math.floor(start)}s` : "");
   else if (vs.t === "cf") url += `${sep}autoplay=true` + (start > 0 ? `&startTime=${Math.floor(start)}s` : "");
+  else if (vs.t === "telegram") url = vs.url;
+  else if (vs.t === "wistia") url += `${sep}autoPlay=true&playerColor=f4b63f` + (start > 0 ? `&time=${Math.floor(start)}` : "");
   else url += `${sep}autoplay=true&preload=true`;
   const f = document.createElement("iframe");
   Object.assign(f, { src: url, allowFullscreen: true, className: "yt", id: "ytHost" });
+  if (vs.t === "telegram") f.style.background = "#0e0c18";
   f.setAttribute("allow", "autoplay; fullscreen; picture-in-picture; encrypted-media");
   f.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
   $("#ytHost").replaceWith(f);
 }
 
-function showOver(title, text) { $("#pOverTitle").textContent = title; $("#pOverText").textContent = text; $("#pOver").hidden = false; }
+function showOver(title, text) { document.querySelectorAll("#pOver a.btn").forEach(x => x.remove()); $("#pOverTitle").textContent = title; $("#pOverText").textContent = text; $("#pOver").hidden = false; }
 function destroyYT() {
   clearInterval(saveT);
   if (ytPlayer) { saveProgress(); try { ytPlayer.destroy(); } catch (e) {} ytPlayer = null; }
@@ -393,7 +400,7 @@ function openPlayer(f, live = false) {
   } else if (progress[f.id] && progress[f.id] < f.d * 60 * 0.95) start = progress[f.id];
 
   if (hasVideo(f) && window.PREVIEW_MODE) {
-    showOver("Namuna ko'rinish", "Bu kinoga video ulangan. Video internetga joylangan haqiqiy saytda ochiladi.");
+    showOver("Namuna ko'rinish", "Bu Claude ichidagi namuna. Haqiqiy saytingizda (github.io) video shu oynaning o'zida o'ynaydi.");
     $("#pClose").focus(); if (reduce) pFrame(); return;
   }
   if (!hasVideo(f)) {
