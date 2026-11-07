@@ -91,7 +91,7 @@ const hideOverlay=()=>$('#pOver').hidden=true;
 function overlay(title,msg){$('#pOverTitle').textContent=title;$('#pOverText').textContent=msg;$('#pOver').hidden=false;}
 function cleanMedia(){if(hlsObj){try{hlsObj.destroy()}catch{}hlsObj=null;}if(videoEl){try{videoEl.pause();videoEl.removeAttribute('src');videoEl.load()}catch{}videoEl=null;}$('#mediaHost').replaceChildren();}
 function openModal(){if($('#modal').hidden)lastFocus=document.activeElement;cleanMedia();hideOverlay();$('#modal').hidden=false;document.body.style.overflow='hidden';$('#pClose').focus();}
-function openFilm(f){if(!f)return;currentFilm=f;currentTV=null;openModal();
+function openFilm(f){if(!f)return;window.EKRAN_TV_PLAYER?.close();currentFilm=f;currentTV=null;openModal();
  $('#pTitle').textContent=f.title;$('#pGenre').textContent=f.genre||'Kino';$('#pMeta').innerHTML=meta(f);$('#pDesc').textContent=f.description||'';
  $('#pFav').hidden=false;$('#similarWrap').hidden=false;$('#similar').innerHTML=FILMS.filter(x=>x.id!==f.id).slice(0,6).map(x=>`<button class="card" type="button" data-film="${x.id}">${poster(x)}</button>`).join('');syncFavorite();
  if(location.origin!=='null'&&location.hash!==`#kino-${f.id}`) history.replaceState(null,'',`#kino-${f.id}`);
@@ -99,18 +99,7 @@ function openFilm(f){if(!f)return;currentFilm=f;currentTV=null;openModal();
  const iframe=document.createElement('iframe');iframe.className='yt';iframe.src=src;iframe.allow='autoplay; fullscreen; picture-in-picture; encrypted-media';iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';iframe.title=f.title+' — Fembed video';
  $('#mediaHost').replaceChildren(iframe);
 }
-function openTV(c,i,isUz=false){if(!c)return;currentFilm=null;currentTV=c;openModal();
- $('#pTitle').textContent=c.name;$('#pGenre').textContent='● Jonli efir';$('#pMeta').innerHTML=`<span>${esc(c.group)}</span>${c.quality?`<span>Manbadagi belgi: ${esc(c.quality)}</span>`:''}`;$('#pDesc').textContent='Jonli telekanal';$('#pFav').hidden=true;$('#similarWrap').hidden=true;
- const hash=`#${isUz?'uzkanal':'kanal'}-${i}`;
- if(location.origin!=='null'&&location.hash!==hash)history.replaceState(null,'',hash);
- const src=String(c.url||'');if(!/^https?:\/\//i.test(src)){overlay('Kanal ro‘yxatda mavjud', 'Ushbu kanalning ommaviy efir manzili ulanmagan. IPTV provayderidan ruxsatli HTTPS oqimini ulash kerak.');return;}
- if(location.protocol==='https:'&&src.startsWith('http://')){overlay('HTTPS efir manzili kerak','Ushbu M3U kanalining manzili HTTP. HTTPS saytda xavfsizlik sababli bloklanadi. Provayderdan rasmiy HTTPS (.m3u8) havolasini oling.');return;}
- const v=document.createElement('video');v.className='yt';v.controls=true;v.autoplay=true;v.playsInline=true;v.setAttribute('playsinline','');v.style.background='#000';$('#mediaHost').replaceChildren(v);videoEl=v;
- const fail=()=>{if(videoEl===v)overlay('Efir ochilmadi','Server, CORS, geografik cheklov yoki havola muddati sabab bo\'lishi mumkin. Provayder bilan tekshiring.');};
- v.addEventListener('error',fail);
- if(v.canPlayType('application/vnd.apple.mpegurl')){v.src=src;v.play().catch(()=>{});return;}
- loadHls().then(Hls=>{if(videoEl!==v)return;if(!Hls.isSupported()){fail();return;}hlsObj=new Hls({liveDurationInfinity:true});hlsObj.on(Hls.Events.ERROR,(_,d)=>{if(d.fatal)fail();});hlsObj.attachMedia(v);hlsObj.loadSource(src);hlsObj.on(Hls.Events.MANIFEST_PARSED,()=>v.play().catch(()=>{}));}).catch(fail);
-}
+function openTV(c,i,isUz=false){if(!c)return;window.EKRAN_TV_PLAYER?.open(c,i,isUz);}
 let hlsPromise=null;
 function loadHls(){if(window.Hls)return Promise.resolve(window.Hls);if(hlsPromise)return hlsPromise;hlsPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';s.async=true;s.onload=()=>window.Hls?resolve(window.Hls):reject(new Error('HLS kutubxonasi yuklanmadi'));s.onerror=reject;document.head.append(s);});return hlsPromise;}
 function closeModal(){cleanMedia();$('#modal').hidden=true;document.body.style.overflow='';currentFilm=null;currentTV=null;if(location.origin!=='null'&&/^#(?:kino|kanal|uzkanal)-/.test(location.hash))history.replaceState(null,'',location.pathname+location.search);lastFocus?.focus?.();}
