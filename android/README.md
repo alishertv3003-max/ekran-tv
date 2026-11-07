@@ -1,13 +1,8 @@
-# Ekran TV Android sinov ilovasi
-
-Bu ilova telefon va Android TV uchun **GitHub Pages**'dagi
-https://alishertv3003-max.github.io/ekran-tv/ saytini WebView orqali ochadi.
-
-**Eslatma:** ushbu GitHub repozitoriyidagi hozirgi sayt eski versiyada. Bu APK so'nggi ZIP'dagi kanallarni ichiga joylashtirmaydi. Sayt yangilanganda ilova ham internetdagi yangi saytni ochadi.
-
-Android TV pulti uchun yo'nalish tugmalari navigatsiyasi va to'liq ekran video qo'llab-quvvatlanadi.
-
-Bu kodga IPTV tokenlari, mahfiy havolalar va obuna kalitlari qo'shilmagan.
-
-Debug APK faylini GitHub Actions > Ekran TV Android APK > Artifacts bo'limidan yuklash mumkin.
-Samsung Tizen yoki LG webOS uchun APK mos emas.
+# Ekran TV local Android APK
+- App opens its **bundled** interface and catalog from Android assets, not GitHub Pages.
+- Video and IPTV streaming still require internet, licensed content and usable source streams.
+- TV remote D-pad, OK, Back, and fullscreen implemented (actual device verification pending).
+- The publicly available international-channel catalog does not include provider IPTV tokens, so those streams cannot play until authorized sources are configured.
+- Fembed embeds may be refused by the third-party platform.
+- Android TV and Google TV supported at APK installation level; Samsung Tizen and LG webOS are not.
+- This is a debug APK for device testing only.

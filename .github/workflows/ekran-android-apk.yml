@@ -1,4 +1,4 @@
-name: Ekran TV Android APK
+name: Ekran TV Offline Shell APK
 on:
   push:
     branches: [ekrantv-android-apk-test-20261107]
@@ -17,20 +17,29 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Put website catalog inside APK
+        run: |
+          git fetch origin main --depth=1
+          mkdir -p android/app/src/main/assets/site
+          for item in index.html css js data icons manifest.webmanifest; do
+            git archive origin/main "$item" | tar -x -C android/app/src/main/assets/site
+          done
+          grep -q 'Oilaviy video' android/app/src/main/assets/site/data/films.js
+          grep -q 'window.UZ_CHANNELS' android/app/src/main/assets/site/data/uz_channels.js
+          grep -q 'window.TV_CHANNELS' android/app/src/main/assets/site/data/channels.js
+          test ! -e android/app/src/main/assets/site/data/private-iptv.txt
       - name: Install Android SDK 35
         run: |
           export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          export ANDROID_SDK_ROOT="$ANDROID_HOME"
           TOOL="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -1)"
-          echo "Android SDK manager: $TOOL"
           if [ -z "$TOOL" ]; then echo "Android SDK manager missing"; exit 1; fi
           yes | "$TOOL" --licenses >/dev/null || true
           "$TOOL" 'platforms;android-35' 'build-tools;35.0.0'
           echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
-      - name: Assemble debug APK
+      - name: Assemble test APK
         run: gradle -p android --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Ekran-TV-Android-APK
+          name: Ekran-TV-Independent-Android-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
