@@ -19,8 +19,14 @@ jobs:
           gradle-version: '8.9'
       - name: Install Android SDK 35
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          TOOL="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -1)"
+          echo "Android SDK manager: $TOOL"
+          if [ -z "$TOOL" ]; then echo "Android SDK manager missing"; exit 1; fi
+          yes | "$TOOL" --licenses >/dev/null || true
+          "$TOOL" 'platforms;android-35' 'build-tools;35.0.0'
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
       - name: Assemble debug APK
         run: gradle -p android --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
