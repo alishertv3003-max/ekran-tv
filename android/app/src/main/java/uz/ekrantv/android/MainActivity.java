@@ -118,8 +118,8 @@ public class MainActivity extends Activity {
   private String remoteScript() {
     return "(function(){if(window.__ekranRemote)return;window.__ekranRemote=true;"
       +"var st=document.createElement('style');st.textContent='a:focus,button:focus,input:focus,select:focus,[tabindex]:focus{outline:4px solid #ffcc42!important;outline-offset:4px!important}';document.head.appendChild(st);"
-      +"var sel='a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex=\\\"-1\\\"])';"
-      +"function opts(){return Array.from(document.querySelectorAll(sel)).filter(function(el){var r=el.getBoundingClientRect();return r.width>3&&r.height>3&&getComputedStyle(el).visibility!==\\\"hidden\\\"&&!el.closest('\\\"[hidden]\\\"')});}"
+      +"var sel='a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]';"
+      +"function opts(){return Array.from(document.querySelectorAll(sel)).filter(function(el){var r=el.getBoundingClientRect();return r.width>3&&r.height>3&&el.getAttribute('tabindex')!=='-1'&&getComputedStyle(el).visibility!=='hidden'&&!el.closest('[hidden]')});}"
       +"function p(e){var r=e.getBoundingClientRect();return{x:(r.left+r.right)/2,y:(r.top+r.bottom)/2};}"
       +"document.addEventListener('keydown',function(e){if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;"
       +"if(document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName))return;"
