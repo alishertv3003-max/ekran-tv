@@ -1,481 +1,128 @@
-/* Ekran TV — sayt dasturi. Kinolar ro'yxati: data/films.js */
-(function () {
-"use strict";
+/* Ekran TV — Fembed kino + M3U Telekanallar katalogi. */
+(() => {
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SITE=window.SITE||{name:'Ekran TV'};
+const FILMS=(window.FILMS||[]).map(f=>({...f,id:Number(f.id),title:String(f.title||''),video:String(f.video||'').trim()}));
+const TV=window.TV_CHANNELS||[];
+const UZ=window.UZ_CHANNELS||[];
+function fembed(v){
+  try {
+    const u=new URL(v); const h=u.hostname.toLowerCase();
+    if(u.protocol!=='https:' || !['fembed.co','www.fembed.co'].includes(h)) return '';
+    const m=u.pathname.match(/^\/(?:embed|v)\/([A-Za-z0-9_-]+)\/?$/);
+    return m?`https://fembed.co/embed/${m[1]}`:'';
+  }catch{return '';}
+}
+const findFilm=id=>FILMS.find(x=>x.id===Number(id));
+const palette=(f)=>Array.isArray(f.colors)&&f.colors.length===3?f.colors:['#252047','#7456a8','#e7d8ff'];
+function poster(f){
+ const c=palette(f), img=/^(?:posters\/|https:\/\/)/.test(f.poster||'')?`<img class="pimg" src="${esc(f.poster)}" alt="" loading="lazy">`:'';
+ return `<div class="poster ${img?'has-img':''}" style="--c1:${esc(c[0])};--c2:${esc(c[1])};--c3:${esc(c[2])}">${img}<i class="hills"></i>${fembed(f.video)?'':'<span class="soon">Tez orada</span>'}<div class="pt"><b>${esc(f.title)}</b><span>${esc(f.genre)}${Number(f.year)>0?' · '+esc(f.year):''}</span></div></div>`;
+}
+const dur=m=>{m=Number(m)||0;return m?`${Math.floor(m/60)?Math.floor(m/60)+' soat ':''}${m%60} daq`:''};
+const meta=f=>`${Number(f.rating)>0?`<span class="score">★ ${esc(f.rating)}</span>`:''}${Number(f.year)>0?`<span>${esc(f.year)}</span>`:''}<span>${esc(f.genre)}</span>${dur(f.duration)?`<span>${dur(f.duration)}</span>`:''}<span class="age">${esc(f.age||'0+')}</span>`;
+const toast=(msg,ms=3200)=>{const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.hidden=true,ms);};
+$$('#siteName,.site-name').forEach(el=>el.textContent=SITE.name||'Ekran TV');
+$('#year').textContent=new Date().getFullYear();
+$('#contactMail').textContent=SITE.email||'';$('#contactPhone').textContent=SITE.phone||'';
+const local={get:(k,d)=>{try{return JSON.parse(localStorage.getItem('ekran-'+k))??d}catch{return d}},set:(k,v)=>{try{localStorage.setItem('ekran-'+k,JSON.stringify(v))}catch{}}};
+let currentFilm=null,currentTV=null,lastFocus=null,videoEl=null,hlsObj=null;
+let fav=new Set(local.get('favs',[]));
+let progress=local.get('progress',{});
+function favorite(id){fav.has(id)?fav.delete(id):fav.add(id);local.set('favs',[...fav]);renderFilms();syncFavorite();toast(fav.has(id)?"Ro'yxatga qo'shildi":"Ro'yxatdan olib tashlandi");}
+function syncFavorite(){if(hero) $('#heroFav').textContent=fav.has(hero.id)?"✓ Ro'yxatimda":"＋ Ro'yxatimga";if(currentFilm)$('#pFav').textContent=fav.has(currentFilm.id)?"✓ Ro'yxatimda":"＋ Ro'yxatimga";}
+const hero=findFilm(SITE.heroFilmId)||FILMS[0];
+if(hero){
+  $('#heroTitle').textContent=hero.title;$('#heroDesc').textContent=hero.description||'';$('#heroMeta').innerHTML=meta(hero);
+  const c=palette(hero);$('#heroBg').style.setProperty('--h1',c[1]);$('#heroBg').style.setProperty('--h2',c[2]);
+  const hp=$('#heroPoster'); hp.innerHTML=poster(hero);hp.firstElementChild.style.height='100%';hp.firstElementChild.style.width='100%';
+  $('#heroPlay').onclick=()=>openFilm(hero);$('#heroFav').onclick=()=>favorite(hero.id);
+}else $('#hero').hidden=true;
+const genres=['Hammasi',"Mening ro'yxatim",...new Set(FILMS.map(x=>x.genre).filter(Boolean))];
+let activeGenre='Hammasi',q='',sortBy='new';
+$('#chips').innerHTML=genres.map(g=>`<button class="chip" type="button" data-genre="${esc(g)}" aria-pressed="${g===activeGenre}">${esc(g)}</button>`).join('');
+$('#chips').onclick=e=>{const b=e.target.closest('[data-genre]');if(!b)return;activeGenre=b.dataset.genre;$$('#chips .chip').forEach(x=>x.setAttribute('aria-pressed',x===b));renderFilms();};
+$('#sort').onchange=e=>{sortBy=e.target.value;renderFilms();};
+$('#q').oninput=e=>{q=e.target.value.trim().toLocaleLowerCase();renderFilms();if(q)$('#kinolar').scrollIntoView({behavior:'smooth'});};
+function card(f){return `<div class="tile"><button class="card" type="button" data-film="${f.id}">${poster(f)}<span class="ci"><b>${esc(f.title)}</b><span>${Number(f.rating)>0?'★ '+esc(f.rating):''}</span></span></button><button class="fav" type="button" data-fav="${f.id}" aria-label="Sevimlilarga qo'shish" aria-pressed="${fav.has(f.id)}">${fav.has(f.id)?'★':'☆'}</button></div>`;}
+function renderFilms(){
+ let arr=FILMS.filter(f=>(activeGenre==='Hammasi'||(activeGenre==="Mening ro'yxatim"?fav.has(f.id):f.genre===activeGenre))&&(!q||[f.title,f.genre].some(x=>String(x).toLocaleLowerCase().includes(q))));
+ arr.sort(sortBy==='rating'?(a,b)=>Number(b.rating)-Number(a.rating):sortBy==='az'?(a,b)=>a.title.localeCompare(b.title):(a,b)=>Number(!!fembed(b.video))-Number(!!fembed(a.video))||Number(b.year)-Number(a.year)||b.id-a.id);
+ $('#grid').innerHTML=arr.map(card).join('');$('#empty').hidden=!!arr.length;$('#empty').textContent=arr.length?'':"Kino topilmadi.";
+}
+function renderContinue(){const arr=FILMS.filter(f=>progress[f.id]>60&&progress[f.id]<Number(f.duration)*60*.95);
+ $('#davom').hidden=!arr.length;$('#contRow').innerHTML=arr.map(f=>`<button class="card" data-film="${f.id}" type="button">${poster(f)}<span class="ci"><b>${esc(f.title)}</b></span></button>`).join('');}
+renderFilms();renderContinue();syncFavorite();
+/* Xalqaro telekanallar: O'zbekiston kanallari bu ro'yxatda emas. */
+const categories=[...new Set(TV.map(t=>t.group||'Boshqa'))].sort((a,b)=>a.localeCompare(b));
+$('#tvCategory').innerHTML='<option value="">Barcha kategoriyalar</option>'+categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+let tvQuery='',tvGroup='',tvVisible=72,tvFiltered=TV;
+function tvCard(ch,i,isUz=false){const logo=String(ch.logo||'');const safeLogo=/^https:\/\//i.test(logo)?logo:'';
+ return `<button type="button" class="tv-card" ${isUz?`data-uz-tv="${i}"`:`data-tv="${i}"`} title="${esc(ch.name)}"><span class="tv-icon">${safeLogo?`<img src="${esc(safeLogo)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:esc(ch.name?.[0]||'TV')}</span><span class="tv-info"><strong>${esc(ch.name)}</strong><small>${esc(ch.group)}</small><span class="tv-live">● TELEKANAL${ch.quality?` · <b class="tv-quality">${esc(ch.quality)}</b>`:''}</span></span></button>`;}
+function renderTv(){tvFiltered=TV.map((ch,i)=>({...ch,_i:i})).filter(ch=>(!tvGroup||ch.group===tvGroup)&&(!tvQuery||(`${ch.name} ${ch.group}`).toLocaleLowerCase().includes(tvQuery)));
+ const displayed=tvFiltered.slice(0,tvVisible);$('#tvGrid').innerHTML=displayed.map(ch=>tvCard(ch,ch._i)).join('');$('#tvEmpty').hidden=tvFiltered.length!==0;
+ $('#tvCount').textContent=`${TV.length.toLocaleString('en-US')} ta kanal · ${tvFiltered.length} tasi ko'rsatilmoqda`;
+ $('#tvMore').hidden=tvFiltered.length<=tvVisible;$('#tvMore').textContent=`Yana kanallarni ko'rsatish (${tvFiltered.length-tvVisible} ta qoldi)`;
+}
+$('#tvSearch').oninput=e=>{tvQuery=e.target.value.trim().toLocaleLowerCase();tvVisible=72;renderTv();};
+$('#tvCategory').onchange=e=>{tvGroup=e.target.value;tvVisible=72;renderTv();};
+$('#tvMore').onclick=()=>{tvVisible+=96;renderTv();};
+$('#tvGrid').onclick=e=>{const b=e.target.closest('[data-tv]');if(b)openTV(TV[Number(b.dataset.tv)],Number(b.dataset.tv));};
+renderTv();
 
-const $ = s => document.querySelector(s);
-const $$ = s => [...document.querySelectorAll(s)];
-const pad = n => String(n).padStart(2, "0");
-const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const fmtDur = m => (m >= 60 ? `${Math.floor(m / 60)} soat ` : "") + `${m % 60} daq`;
-const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-const SITE = window.SITE || { name: "Ekran TV" };
-const LIVE_ON = !!document.getElementById("efir");   // jonli efir bo'limi sahifada bormi
-const SCHED = Object.assign({ startHour: 6, breakMinutes: 12 }, window.SCHEDULE || {});
-
-/* ---------- YouTube havolasidan ID ajratish ---------- */
-function ytId(v) {
-  if (!v) return "";
-  v = String(v).trim();
-  if (/^[\w-]{11}$/.test(v)) return v;
-  const m = v.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/);
-  return m ? m[1] : "";
+/* O‘zbek kanallari: UZ.m3u katalogi, 1080p / 720p / SD nomli variantlar alohida. */
+const uzCategories=[...new Set(UZ.map(t=>t.group||'Boshqa'))].sort((a,b)=>a.localeCompare(b));
+$('#uzCategory').innerHTML='<option value="">Barcha kategoriyalar</option>'+uzCategories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+let uzQuery='',uzGroup='';
+function renderUz(){
+ const matches=UZ.map((ch,i)=>({...ch,_i:i})).filter(ch=>(!uzGroup||ch.group===uzGroup)&&(!uzQuery||(`${ch.name} ${ch.group}`).toLocaleLowerCase().includes(uzQuery)));
+ $('#uzGrid').innerHTML=matches.map(ch=>tvCard(ch,ch._i,true)).join('');
+ $('#uzEmpty').hidden=matches.length!==0;
+ $('#uzCount').textContent=`${UZ.length} ta oqim (HD/SD variantlar bilan) · ${matches.length} tasi ko‘rsatilmoqda`;
 }
-
-/* ---------- Bulutdagi video havolasini aniqlash ----------
-   file  — to'g'ridan-to'g'ri video fayl (.mp4, .webm, .mov)
-   hls   — oqim (.m3u8)
-   embed — tanilgan video xizmati pleyeri (Bunny Stream, Vimeo, Cloudflare Stream) */
-function videoSrc(v) {
-  if (!v) return null;
-  v = String(v).trim();
-  if (!/^https:\/\//i.test(v)) return null;
-  let u; try { u = new URL(v); } catch (e) { return null; }
-  const path = u.pathname.toLowerCase(), host = u.hostname.toLowerCase();
-  if (/\.m3u8$/.test(path)) return { kind: "hls", url: v };
-  if (/\.(mp4|m4v|webm|mov)$/.test(path)) return { kind: "file", url: v };
-  let m;
-  if ((m = v.match(/vimeo\.com\/(?:video\/)?(\d+)/))) return { kind: "embed", url: `https://player.vimeo.com/video/${m[1]}`, t: "vimeo" };
-  if (host === "iframe.mediadelivery.net") return { kind: "embed", url: v.replace("/play/", "/embed/"), t: "bunny" };
-  if (host === "iframe.videodelivery.net" || host.endsWith(".cloudflarestream.com")) return { kind: "embed", url: v, t: "cf" };
-  if ((host === "t.me" || host === "telegram.me") && (m = u.pathname.match(/^\/(?:s\/)?([A-Za-z0-9_]{4,})\/(\d+)\/?$/)))
-    return { kind: "embed", url: `https://t.me/${m[1]}/${m[2]}?embed=1&dark=1`, t: "telegram" };
-  if ((host.endsWith("wistia.com") || host.endsWith("wistia.net") || host === "wi.st") && (m = v.match(/(?:medias|iframe|embed\/medias)\/([a-z0-9]{6,})/i)))
-    return { kind: "embed", url: `https://fast.wistia.net/embed/iframe/${m[1]}`, t: "wistia" };
-  return null;
+$('#uzSearch').oninput=e=>{uzQuery=e.target.value.trim().toLocaleLowerCase();renderUz();};
+$('#uzCategory').onchange=e=>{uzGroup=e.target.value;renderUz();};
+$('#uzGrid').onclick=e=>{const b=e.target.closest('[data-uz-tv]');if(b)openTV(UZ[Number(b.dataset.uzTv)],Number(b.dataset.uzTv),true);};
+renderUz();
+/* Universal modal: faqat Fembed kino va HLS telekanal (YouTube yo'q). */
+const hideOverlay=()=>$('#pOver').hidden=true;
+function overlay(title,msg){$('#pOverTitle').textContent=title;$('#pOverText').textContent=msg;$('#pOver').hidden=false;}
+function cleanMedia(){if(hlsObj){try{hlsObj.destroy()}catch{}hlsObj=null;}if(videoEl){try{videoEl.pause();videoEl.removeAttribute('src');videoEl.load()}catch{}videoEl=null;}$('#mediaHost').replaceChildren();}
+function openModal(){if($('#modal').hidden)lastFocus=document.activeElement;cleanMedia();hideOverlay();$('#modal').hidden=false;document.body.style.overflow='hidden';$('#pClose').focus();}
+function openFilm(f){if(!f)return;currentFilm=f;currentTV=null;openModal();
+ $('#pTitle').textContent=f.title;$('#pGenre').textContent=f.genre||'Kino';$('#pMeta').innerHTML=meta(f);$('#pDesc').textContent=f.description||'';
+ $('#pFav').hidden=false;$('#similarWrap').hidden=false;$('#similar').innerHTML=FILMS.filter(x=>x.id!==f.id).slice(0,6).map(x=>`<button class="card" type="button" data-film="${x.id}">${poster(x)}</button>`).join('');syncFavorite();
+ if(location.origin!=='null'&&location.hash!==`#kino-${f.id}`) history.replaceState(null,'',`#kino-${f.id}`);
+ const src=fembed(f.video);if(!src){overlay('Video hali qo\'shilmagan','Admin panelga Fembed havolasini kiriting.');return;}
+ const iframe=document.createElement('iframe');iframe.className='yt';iframe.src=src;iframe.allow='autoplay; fullscreen; picture-in-picture; encrypted-media';iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';iframe.title=f.title+' — Fembed video';
+ $('#mediaHost').replaceChildren(iframe);
 }
-
-const FILMS = (window.FILMS || []).map(f => {
-  const yt = ytId(f.youtube) || ytId(f.video);
-  return {
-    id: f.id, t: f.title, g: f.genre, y: f.year, d: f.duration, age: f.age, s: f.rating,
-    c: f.colors && f.colors.length === 3 ? f.colors : ["#2b2450", "#5b4a9e", "#d8ccff"],
-    desc: f.description || "", yt, vs: yt ? null : videoSrc(f.video), poster: f.poster || ""
-  };
-});
-const hasVideo = f => !!(f.yt || f.vs);
-const byId = id => FILMS.find(f => f.id === id);
-
-/* ---------- Brauzer xotirasi (ixtiyoriy) ---------- */
-const store = {
-  get(k, def) { try { const v = localStorage.getItem("ekran-" + k); return v ? JSON.parse(v) : def; } catch (e) { return def; } },
-  set(k, v) { try { localStorage.setItem("ekran-" + k, JSON.stringify(v)); } catch (e) {} }
-};
-let favs = new Set(store.get("favs", []));
-let progress = store.get("progress", {});   // { filmId: soniya }
-
-function toast(msg, ms = 2600) {
-  const t = $("#toast"); t.textContent = msg; t.hidden = false;
-  clearTimeout(toast._t); toast._t = setTimeout(() => (t.hidden = true), ms);
+function openTV(c,i,isUz=false){if(!c)return;currentFilm=null;currentTV=c;openModal();
+ $('#pTitle').textContent=c.name;$('#pGenre').textContent='● Jonli efir';$('#pMeta').innerHTML=`<span>${esc(c.group)}</span>${c.quality?`<span>Manbadagi belgi: ${esc(c.quality)}</span>`:''}`;$('#pDesc').textContent='Jonli telekanal';$('#pFav').hidden=true;$('#similarWrap').hidden=true;
+ const hash=`#${isUz?'uzkanal':'kanal'}-${i}`;
+ if(location.origin!=='null'&&location.hash!==hash)history.replaceState(null,'',hash);
+ const src=String(c.url||'');if(!/^https?:\/\//i.test(src)){overlay('Kanal ro‘yxatda mavjud', 'Ushbu kanalning ommaviy efir manzili ulanmagan. IPTV provayderidan ruxsatli HTTPS oqimini ulash kerak.');return;}
+ if(location.protocol==='https:'&&src.startsWith('http://')){overlay('HTTPS efir manzili kerak','Ushbu M3U kanalining manzili HTTP. HTTPS saytda xavfsizlik sababli bloklanadi. Provayderdan rasmiy HTTPS (.m3u8) havolasini oling.');return;}
+ const v=document.createElement('video');v.className='yt';v.controls=true;v.autoplay=true;v.playsInline=true;v.setAttribute('playsinline','');v.style.background='#000';$('#mediaHost').replaceChildren(v);videoEl=v;
+ const fail=()=>{if(videoEl===v)overlay('Efir ochilmadi','Server, CORS, geografik cheklov yoki havola muddati sabab bo\'lishi mumkin. Provayder bilan tekshiring.');};
+ v.addEventListener('error',fail);
+ if(v.canPlayType('application/vnd.apple.mpegurl')){v.src=src;v.play().catch(()=>{});return;}
+ loadHls().then(Hls=>{if(videoEl!==v)return;if(!Hls.isSupported()){fail();return;}hlsObj=new Hls({liveDurationInfinity:true});hlsObj.on(Hls.Events.ERROR,(_,d)=>{if(d.fatal)fail();});hlsObj.attachMedia(v);hlsObj.loadSource(src);hlsObj.on(Hls.Events.MANIFEST_PARSED,()=>v.play().catch(()=>{}));}).catch(fail);
 }
-
-/* ---------- Poster ---------- */
-function posterHTML(f, cls = "") {
-  const sx = 10 + (f.id * 17) % 40, sy = 6 + (f.id * 11) % 22;
-  const img = f.poster ? `<img class="pimg" src="${esc(f.poster)}" alt="" loading="lazy">` : "";
-  const soon = hasVideo(f) ? "" : `<span class="soon">Tez orada</span>`;
-  return `<div class="poster ${cls} ${f.poster ? "has-img" : ""}" style="--c1:${f.c[0]};--c2:${f.c[1]};--c3:${f.c[2]};--sx:${sx}%;--sy:${sy}%">${img}<i class="hills"></i>${soon}<div class="pt"><b>${esc(f.t)}</b><span>${esc(f.g)} · ${f.y}</span></div></div>`;
-}
-function fillPoster(el, f) {
-  const tmp = document.createElement("div"); tmp.innerHTML = posterHTML(f);
-  const p = tmp.firstChild; el.style.cssText = p.style.cssText; el.className = p.className + " hero-poster"; el.innerHTML = p.innerHTML;
-}
-const metaHTML = f => `<span class="score">★ ${f.s}</span><span>${f.y}</span><span>${esc(f.g)}</span><span>${fmtDur(f.d)}</span><span class="age">${esc(f.age)}</span>`;
-
-/* ---------- Umumiy ---------- */
-$$("#siteName,.site-name").forEach(e => (e.textContent = SITE.name));
-$("#year").textContent = new Date().getFullYear();
-$("#contactMail").textContent = SITE.email || "";
-$("#contactPhone").textContent = SITE.phone || "";
-
-/* ---------- Hero ---------- */
-const hero = byId(SITE.heroFilmId) || FILMS[0];
-if (hero) {
-  $("#heroTitle").textContent = hero.t;
-  $("#heroDesc").textContent = hero.desc;
-  $("#heroMeta").innerHTML = metaHTML(hero);
-  $("#heroBg").style.setProperty("--h1", hero.c[1]);
-  $("#heroBg").style.setProperty("--h2", hero.c[2]);
-  fillPoster($("#heroPoster"), hero);
-  $("#heroPlay").onclick = () => openPlayer(hero);
-  $("#heroFav").onclick = () => toggleFav(hero.id);
-}
-
-/* ---------- Sevimlilar ---------- */
-function toggleFav(id) {
-  favs.has(id) ? favs.delete(id) : favs.add(id);
-  store.set("favs", [...favs]);
-  toast(favs.has(id) ? "Ro'yxatingizga qo'shildi" : "Ro'yxatingizdan olib tashlandi");
-  renderGrid(); syncFavBtns();
-}
-const favLabel = id => (favs.has(id) ? "✓ Ro'yxatimda" : "＋ Ro'yxatimga");
-function syncFavBtns() {
-  if (hero) $("#heroFav").textContent = favLabel(hero.id);
-  if (pFilm) $("#pFav").textContent = favLabel(pFilm.id);
-}
-
-/* ---------- Katalog ---------- */
-const GENRES = ["Hammasi", "Mening ro'yxatim", ...new Set(FILMS.map(f => f.g))];
-let genre = "Hammasi", query = "", sortBy = "new";
-$("#chips").innerHTML = GENRES.map(g => `<button class="chip" type="button" aria-pressed="${g === genre}">${esc(g)}</button>`).join("");
-$("#chips").addEventListener("click", e => {
-  const b = e.target.closest(".chip"); if (!b) return;
-  genre = b.textContent; $$("#chips .chip").forEach(c => c.setAttribute("aria-pressed", c === b)); renderGrid();
-});
-$("#sort").addEventListener("change", e => { sortBy = e.target.value; renderGrid(); });
-let searchT;
-$("#q").addEventListener("input", e => {
-  query = e.target.value.trim().toLowerCase(); renderGrid();
-  clearTimeout(searchT); if (query) searchT = setTimeout(() => $("#kinolar").scrollIntoView({ behavior: reduce ? "auto" : "smooth" }), 350);
-});
-function tileHTML(f) {
-  return `<div class="tile"><button class="card" type="button" data-id="${f.id}">${posterHTML(f)}<span class="ci"><b>${esc(f.t)}</b><span>★ ${f.s}</span></span></button><button class="fav" type="button" data-fav="${f.id}" aria-pressed="${favs.has(f.id)}" aria-label="${favs.has(f.id) ? "Ro'yxatdan olib tashlash" : "Ro'yxatga qo'shish"}">${favs.has(f.id) ? "★" : "☆"}</button></div>`;
-}
-function renderGrid() {
-  let list = FILMS.filter(f =>
-    (genre === "Hammasi" || (genre === "Mening ro'yxatim" ? favs.has(f.id) : f.g === genre)) &&
-    (!query || f.t.toLowerCase().includes(query) || f.g.toLowerCase().includes(query)));
-  const sorters = { new: (a, b) => b.y - a.y || b.id - a.id, rating: (a, b) => b.s - a.s, az: (a, b) => a.t.localeCompare(b.t, "uz") };
-  list.sort(sorters[sortBy]);
-  $("#grid").innerHTML = list.map(tileHTML).join("");
-  const empty = $("#empty"); empty.hidden = list.length > 0;
-  empty.textContent = !list.length && genre === "Mening ro'yxatim" && !query
-    ? "Ro'yxatingiz hozircha bo'sh. Kino posteridagi ☆ belgisini bosib qo'shing."
-    : "Bunday kino topilmadi. Boshqa nom bilan qidirib ko'ring.";
-}
-document.addEventListener("click", e => {
-  const fv = e.target.closest("[data-fav]"); if (fv) { toggleFav(+fv.dataset.fav); return; }
-  const c = e.target.closest("[data-id]"); if (c) openPlayer(byId(+c.dataset.id));
-});
-renderGrid();
-
-/* ---------- Ko'rishni davom ettirish ---------- */
-function renderContinue() {
-  const list = Object.entries(progress).map(([id, sec]) => ({ f: byId(+id), sec }))
-    .filter(x => x.f && x.sec > 60 && x.sec < x.f.d * 60 * 0.95);
-  $("#davom").hidden = !list.length;
-  $("#contRow").innerHTML = list.map(({ f, sec }) =>
-    `<button class="card" type="button" data-id="${f.id}">${posterHTML(f)}<span class="progress-mini"><i style="width:${Math.min(100, sec / (f.d * 60) * 100).toFixed(1)}%"></i></span><span class="ci"><b>${esc(f.t)}</b></span></button>`).join("");
-}
-renderContinue();
-
-/* ---------- Efir jadvali (Toshkent vaqti) ---------- */
-function tashParts() {
-  const p = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Tashkent", year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).formatToParts(new Date());
-  const g = t => +p.find(x => x.type === t).value;
-  return { y: g("year"), mo: g("month"), d: g("day"), h: g("hour") % 24, mi: g("minute"), s: g("second") };
-}
-const tashSec = () => { const t = tashParts(); return t.h * 3600 + t.mi * 60 + t.s; };
-const START = SCHED.startHour * 60;
-function nowMin() { let n = tashSec() / 60; if (n < START) n += 1440; return n; }
-// Har kuni sana bo'yicha boshqacha tartib, lekin hamma tomoshabin uchun bir xil
-function daySeed() { const t = tashParts(); const shift = t.h < SCHED.startHour ? -1 : 0; return Math.floor(Date.UTC(t.y, t.mo - 1, t.d + shift) / 864e5); }
-function buildDay(ch) {
-  const pool = FILMS.filter(f => !ch.genres || ch.genres.includes(f.g));
-  if (!pool.length) return [];
-  let t = START, out = [], i = (daySeed() + ch.number * 3) % pool.length;
-  while (t < START + 1440) { const f = pool[i % pool.length], len = f.d + SCHED.breakMinutes; out.push({ f, start: t, end: t + len }); t += len; i++; }
-  return out;
-}
-const CHANNELS = (window.CHANNELS || []).filter(c => FILMS.some(f => !c.genres || c.genres.includes(f.g)));
-const EXT = (window.LIVE_CHANNELS || []).map(c => Object.assign({}, c, { yt: ytId(c.youtube), stream: String(c.stream || "").trim() }))
-  .filter(c => c.yt || /^https:\/\//.test(c.stream));
-function extCardHTML(c) {
-  const logo = c.logo ? `<img src="${esc(c.logo)}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:12px">` : esc(c.short || c.name[0]);
-  return `<button class="chan" type="button" data-ext="${esc(c.id)}" style="--ch:${esc(c.color || "#9b5de5")}"><span class="chan-logo">${logo}${c.number ? `<small>${c.number}</small>` : ""}</span><span class="chan-body"><span class="chan-top"><b>${esc(c.name)}</b><span class="mini-live">JONLI</span></span><span class="chan-now">${esc(c.description || "Hamkor kanal efiri")}</span></span></button>`;
-}
-let DAYS = {}, dayKey = -1;
-function ensureDays() { const k = daySeed(); if (k !== dayKey) { dayKey = k; DAYS = {}; CHANNELS.forEach(c => (DAYS[c.id] = buildDay(c))); } }
-ensureDays();
-let chan = CHANNELS[0];
-const hm = m => `${pad(Math.floor(m / 60) % 24)}:${pad(Math.floor(m % 60))}`;
-function slotIdx(day) { const n = nowMin(); const i = day.findIndex(s => n >= s.start && n < s.end); return i < 0 ? day.length - 1 : i; }
-function liveSlot(ch = chan) { const day = DAYS[ch.id]; return day[slotIdx(day)]; }
-
-const months = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"];
-const weekdays = ["Yakshanba", "Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"];
-
-function selectChannel(id, scroll) {
-  chan = CHANNELS.find(c => c.id === id) || chan; renderLive();
-  if (scroll) $("#efir").scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
-}
-let liveFilm;
-function renderLive() {
-  if (!chan || !LIVE_ON) return;
-  ensureDays();
-  const day = DAYS[chan.id], i = slotIdx(day), s = day[i], n = nowMin();
-  liveFilm = s.f;
-  $("#liveChan").textContent = `${chan.name} · ${chan.number}-kanal`;
-  $("#liveTitle").textContent = (n - s.start) >= s.f.d ? `Tanaffus · keyin: ${day[(i + 1) % day.length].f.t}` : s.f.t;
-  $("#liveStart").textContent = hm(s.start); $("#liveEnd").textContent = hm(s.end);
-  $("#liveBar").style.width = Math.min(100, (n - s.start) / (s.end - s.start) * 100).toFixed(1) + "%";
-  const th = $("#liveThumb");
-  if (s.f.yt && !window.PREVIEW_MODE) { const src = `https://i.ytimg.com/vi/${s.f.yt}/hqdefault.jpg`; if (th.getAttribute("src") !== src) th.src = src; th.hidden = false; } else th.hidden = true;
-  $("#nextList").innerHTML = day.slice(i + 1, i + 5).map(x =>
-    `<button class="next" type="button" data-id="${x.f.id}">${posterHTML(x.f)}<span style="min-width:0"><h4>${esc(x.f.t)}</h4><small>${esc(x.f.g)} · ${esc(x.f.age)}</small></span><span class="time">${hm(x.start)}</span></button>`).join("");
-  // Kanallar
-  $("#chanGrid").innerHTML = CHANNELS.map(c => {
-    const cs = liveSlot(c), p = Math.min(100, (n - cs.start) / (cs.end - cs.start) * 100).toFixed(1);
-    return `<button class="chan" type="button" data-ch="${c.id}" aria-pressed="${c.id === chan.id}" style="--ch:${c.color}"><span class="chan-logo">${esc(c.short)}<small>${c.number}</small></span><span class="chan-body"><span class="chan-top"><b>${esc(c.name)}</b><span class="mini-live">EFIRDA</span></span><span class="chan-now">${esc(cs.f.t)} · ${hm(cs.start)}–${hm(cs.end)}</span><span class="bar"><i style="width:${p}%"></i></span></span></button>`;
-  }).join("") + (EXT.length ? EXT.map(extCardHTML).join("") : `<div class="chan chan-add"><span class="chan-logo">＋</span><span class="chan-body"><b style="font-size:15px">Hamkor kanallar</b><span class="chan-now" style="white-space:normal">Litsenziyali telekanallar shu yerga qo'shiladi</span></span></div>`);
-  // Teledastur
-  $("#epgTabs").innerHTML = CHANNELS.map(c => `<button class="chip" type="button" data-epg="${c.id}" aria-pressed="${c.id === chan.id}">${esc(c.name)}</button>`).join("");
-  $("#epg").innerHTML = day.map((x, k) =>
-    `<button class="slot ${k < i ? "past" : k === i ? "now" : ""}" type="button" ${k === i ? 'data-live="1"' : `data-id="${x.f.id}"`}><span class="time">${hm(x.start)}</span><span><h4>${esc(x.f.t)}${k === i ? '<span class="tag-now">● EFIRDA</span>' : ""}</h4><small>${esc(x.f.g)} · ${fmtDur(x.f.d)}</small></span></button>`).join("");
-  const t = tashParts(), wd = new Date(Date.UTC(t.y, t.mo - 1, t.d)).getUTCDay();
-  $("#epgDate").textContent = `${weekdays[wd]}, ${t.d}-${months[t.mo - 1]}`;
-}
-if (LIVE_ON) {
-$("#chanGrid").addEventListener("click", e => {
-  const x = e.target.closest("[data-ext]"); if (x) { openExternal(EXT.find(c => c.id === x.dataset.ext)); return; }
-  const b = e.target.closest("[data-ch]"); if (b) selectChannel(b.dataset.ch, true);
-});
-$("#epgTabs").addEventListener("click", e => { const b = e.target.closest("[data-epg]"); if (b) selectChannel(b.dataset.epg, false); });
-$("#epg").addEventListener("click", e => { if (e.target.closest("[data-live]")) openPlayer(liveFilm, true); });
-function tickClock() { const s = tashSec(); $("#clock").textContent = `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s % 3600 / 60))}:${pad(s % 60)}`; }
-renderLive(); tickClock();
-setInterval(tickClock, 1000); setInterval(renderLive, 30000);
-$("#liveScreen").onclick = () => openPlayer(liveFilm, true);
-$("#liveScreen").onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPlayer(liveFilm, true); } };
-}
-
-/* ---------- Animatsiyali fon (video yo'q paytda) ---------- */
-function filmPainter(canvas, getFilm) {
-  const ctx = canvas.getContext("2d"); let t = 0;
-  return function frame() {
-    const r = canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
-    if (!r.width) return;
-    if (canvas.width !== Math.round(r.width * dpr)) { canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr); }
-    const w = canvas.width, h = canvas.height, f = getFilm(); if (!f) return;
-    const g = ctx.createLinearGradient(0, 0, w, h); g.addColorStop(0, f.c[0]); g.addColorStop(1, f.c[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-    const cx = w * (.5 + .25 * Math.sin(t / 240)), cy = h * (.38 + .06 * Math.cos(t / 180));
-    const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, h * .6); rg.addColorStop(0, f.c[2]); rg.addColorStop(1, "transparent"); ctx.fillStyle = rg; ctx.fillRect(0, 0, w, h);
-    for (let L = 0; L < 3; L++) {
-      ctx.beginPath(); ctx.moveTo(0, h);
-      const base = h * (.62 + L * .12), amp = h * (.09 - L * .02), off = t * (.4 + L * .5);
-      for (let x = 0; x <= w; x += w / 40) ctx.lineTo(x, base - amp * Math.sin((x + off * dpr) / (w / (3 + L))) - amp * .5 * Math.sin((x * 2.3 + off) / (w / 5)));
-      ctx.lineTo(w, h); ctx.closePath(); ctx.fillStyle = `rgba(8,6,18,${.35 + L * .2})`; ctx.fill();
-    }
-    t++;
-  };
-}
-const liveFrame = LIVE_ON ? filmPainter($("#liveCanvas"), () => liveFilm) : () => {};
-const pFrame = filmPainter($("#pCanvas"), () => pFilm);
-function loop() { if (LIVE_ON && $("#liveThumb").hidden) liveFrame(); if (!$("#modal").hidden && !ytPlayer && !videoEl) pFrame(); if (!reduce) requestAnimationFrame(loop); }
-requestAnimationFrame(loop);
-
-/* ---------- YouTube pleyer ---------- */
-let ytReady;
-function loadYT() {
-  if (ytReady) return ytReady;
-  ytReady = new Promise((res, rej) => {
-    if (window.YT && window.YT.Player) return res(window.YT);
-    const prev = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => { prev && prev(); res(window.YT); };
-    const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; s.async = true;
-    s.onerror = () => { ytReady = null; rej(new Error("yt")); };
-    document.head.appendChild(s);
-  });
-  return ytReady;
-}
-let ytPlayer = null, pFilm = null, isLive = false, saveT = null, lastFocus = null, videoEl = null, hls = null;
-
-/* ---------- Hamkor kanal (m3u8) uchun HLS pleyer ---------- */
-let hlsReady;
-function loadHls() {
-  if (hlsReady) return hlsReady;
-  hlsReady = new Promise((res, rej) => {
-    if (window.Hls) return res(window.Hls);
-    const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js";
-    s.onload = () => res(window.Hls); s.onerror = () => { hlsReady = null; rej(new Error("hls")); };
-    document.head.appendChild(s);
-  });
-  return hlsReady;
-}
-function setPlayerChrome(ext) {
-  $("#pFav").hidden = ext; $("#pShare").hidden = ext; $("#similarWrap").hidden = ext;
-}
-function openExternal(c) {
-  if (!c) return;
-  if ($("#modal").hidden) lastFocus = document.activeElement;
-  destroyYT();
-  pFilm = { id: "ext-" + c.id, t: c.name, c: [c.color || "#2b2450", "#1a1630", "#d8ccff"], d: 0 }; isLive = true;
-  setPlayerChrome(true);
-  $("#pOver").hidden = true;
-  $("#pTitle").textContent = c.name; $("#pDesc").textContent = c.description || "";
-  $("#pGenre").textContent = "● Jonli efir · Hamkor kanal"; $("#pMeta").innerHTML = "";
-  $("#modal").hidden = false; document.body.style.overflow = "hidden"; $("#pClose").focus();
-  if (window.PREVIEW_MODE) { showOver("Namuna ko'rinish", "Jonli efir internetga joylangan haqiqiy saytda ochiladi."); return; }
-  const fail = () => showOver("Efirga ulanib bo'lmadi", "Kanal efiri hozir mavjud emas yoki havola noto'g'ri. Birozdan keyin qayta urinib ko'ring.");
-  if (c.yt) {
-    loadYT().then(YT => {
-      if ($("#modal").hidden) return;
-      ytPlayer = new YT.Player("ytHost", { host: "https://www.youtube-nocookie.com", videoId: c.yt,
-        playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, controls: 1 },
-        events: { onReady: e => { try { e.target.playVideo(); } catch (er) {} }, onError: fail } });
-    }).catch(fail);
-    return;
-  }
-  playStream(c.stream, true, 0, fail, null, true);
-}
-
-/* Video fayl yoki m3u8 oqimni o'z pleyerimizda ochish */
-function playStream(url, isHls, start, onFail, onEnded, liveStream) {
-  const v = document.createElement("video");
-  Object.assign(v, { controls: true, autoplay: true, playsInline: true, preload: "auto" });
-  v.className = "yt"; v.id = "ytHost"; v.setAttribute("playsinline", ""); v.style.background = "#000";
-  $("#ytHost").replaceWith(v); videoEl = v;
-  v.addEventListener("error", () => { if (videoEl === v) onFail(); });
-  if (onEnded) v.addEventListener("ended", onEnded);
-  if (start > 0) v.addEventListener("loadedmetadata", () => { try { if (!isFinite(v.duration) || start < v.duration) v.currentTime = start; } catch (e) {} }, { once: true });
-  if (!isHls || v.canPlayType("application/vnd.apple.mpegurl")) { v.src = url; v.play().catch(() => {}); return; }
-  loadHls().then(Hls => {
-    if (videoEl !== v) return;
-    if (!Hls.isSupported()) return onFail();
-    hls = new Hls(liveStream ? { liveDurationInfinity: true } : { startPosition: start > 0 ? start : -1 });
-    hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) onFail(); });
-    hls.loadSource(url); hls.attachMedia(v);
-    hls.on(Hls.Events.MANIFEST_PARSED, () => v.play().catch(() => {}));
-  }).catch(onFail);
-}
-/* Bunny Stream / Vimeo / Cloudflare Stream pleyeri */
-function playEmbed(vs, start) {
-  let url = vs.url;
-  const sep = url.includes("?") ? "&" : "?";
-  if (vs.t === "vimeo") url += `${sep}autoplay=1` + (start > 0 ? `#t=${Math.floor(start)}s` : "");
-  else if (vs.t === "cf") url += `${sep}autoplay=true` + (start > 0 ? `&startTime=${Math.floor(start)}s` : "");
-  else if (vs.t === "telegram") url = vs.url;
-  else if (vs.t === "wistia") url += `${sep}autoPlay=true&playerColor=f4b63f` + (start > 0 ? `&time=${Math.floor(start)}` : "");
-  else url += `${sep}autoplay=true&preload=true`;
-  const f = document.createElement("iframe");
-  Object.assign(f, { src: url, allowFullscreen: true, className: "yt", id: "ytHost" });
-  if (vs.t === "telegram") f.style.background = "#0e0c18";
-  f.setAttribute("allow", "autoplay; fullscreen; picture-in-picture; encrypted-media");
-  f.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
-  $("#ytHost").replaceWith(f);
-}
-
-function showOver(title, text) { document.querySelectorAll("#pOver a.btn").forEach(x => x.remove()); $("#pOverTitle").textContent = title; $("#pOverText").textContent = text; $("#pOver").hidden = false; }
-function destroyYT() {
-  clearInterval(saveT);
-  if (ytPlayer) { saveProgress(); try { ytPlayer.destroy(); } catch (e) {} ytPlayer = null; }
-  if (hls) { try { hls.destroy(); } catch (e) {} hls = null; }
-  if (videoEl) { try { videoEl.pause(); videoEl.removeAttribute("src"); videoEl.load(); } catch (e) {} videoEl = null; }
-  $("#ytHost").replaceWith(Object.assign(document.createElement("div"), { className: "yt", id: "ytHost" }));
-}
-function saveProgress() {
-  if (isLive || !pFilm || typeof pFilm.id !== "number") return;
-  let sec = 0;
-  if (ytPlayer && typeof ytPlayer.getCurrentTime === "function") sec = Math.floor(ytPlayer.getCurrentTime() || 0);
-  else if (videoEl) sec = Math.floor(videoEl.currentTime || 0);
-  else return;
-  if (sec > 0) { progress[pFilm.id] = sec; store.set("progress", progress); }
-}
-
-function openPlayer(f, live = false) {
-  if (!f) return;
-  if ($("#modal").hidden) lastFocus = document.activeElement;
-  destroyYT();
-  pFilm = f; isLive = live;
-  setPlayerChrome(false);
-  $("#pOver").hidden = true;
-  $("#pTitle").textContent = f.t; $("#pDesc").textContent = f.desc;
-  $("#pGenre").textContent = live ? `● Jonli efir · ${chan.name}` : f.g;
-  $("#pMeta").innerHTML = metaHTML(f);
-  syncFavBtns();
-  const sim = FILMS.filter(x => x.id !== f.id && x.g === f.g).concat(FILMS.filter(x => x.id !== f.id && x.g !== f.g)).slice(0, 8);
-  $("#similar").innerHTML = sim.map(x => `<button class="card" type="button" data-id="${x.id}">${posterHTML(x)}</button>`).join("");
-  $("#modal").hidden = false; document.body.style.overflow = "hidden";
-  if (!live && location.hash !== "#kino-" + f.id) history.replaceState(null, "", "#kino-" + f.id);
-
-  let start = 0;
-  if (live) {
-    const day = DAYS[chan.id], s = liveSlot(), off = (nowMin() - s.start) * 60;
-    if (off >= f.d * 60) {
-      const nx = day[(day.indexOf(s) + 1) % day.length];
-      showOver("Tanaffus", `Keyingi kino: «${nx.f.t}», soat ${hm(nx.start)} da`);
-      $("#pClose").focus(); if (reduce) pFrame(); return;
-    }
-    start = Math.floor(off);
-  } else if (progress[f.id] && progress[f.id] < f.d * 60 * 0.95) start = progress[f.id];
-
-  if (hasVideo(f) && window.PREVIEW_MODE) {
-    showOver("Namuna ko'rinish", "Bu Claude ichidagi namuna. Haqiqiy saytingizda (github.io) video shu oynaning o'zida o'ynaydi.");
-    $("#pClose").focus(); if (reduce) pFrame(); return;
-  }
-  if (!hasVideo(f)) {
-    showOver("Video tez orada", "Bu kino hali saytga yuklanmagan. Tez orada shu yerda ko'rishingiz mumkin bo'ladi.");
-    $("#pClose").focus(); if (reduce) pFrame(); return;
-  }
-  if (f.vs) {
-    const onEnd = () => {
-      if (isLive) showOver("Tanaffus", "Keyingi kino tez orada boshlanadi.");
-      else { delete progress[f.id]; store.set("progress", progress); renderContinue(); }
-    };
-    const onFail = () => showOver("Videoni ochib bo'lmadi", "Video havolasini tekshiring: fayl ommaviy (public) bo'lishi va havola https:// bilan boshlanishi kerak.");
-    if (f.vs.kind === "embed") playEmbed(f.vs, start);
-    else { playStream(f.vs.url, f.vs.kind === "hls", start, onFail, onEnd, false); saveT = setInterval(saveProgress, 10000); }
-    $("#pClose").focus(); return;
-  }
-  loadYT().then(YT => {
-    if (pFilm !== f || $("#modal").hidden) return;
-    ytPlayer = new YT.Player("ytHost", {
-      host: "https://www.youtube-nocookie.com",
-      videoId: f.yt,
-      playerVars: { autoplay: 1, start, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, controls: 1, hl: "uz" },
-      events: {
-        onReady: e => { try { e.target.playVideo(); } catch (er) {} },
-        onStateChange: e => {
-          if (e.data === YT.PlayerState.ENDED) {
-            if (isLive) showOver("Tanaffus", "Keyingi kino tez orada boshlanadi.");
-            else { delete progress[f.id]; store.set("progress", progress); renderContinue(); }
-          }
-        },
-        onError: () => showOver("Videoni ochib bo'lmadi", "Video havolasini tekshiring: u YouTube'da «Ro'yxatda yo'q» (Unlisted) bo'lishi va joylashtirishga ruxsat berilgan bo'lishi kerak.")
-      }
-    });
-    saveT = setInterval(saveProgress, 10000);
-  }).catch(() => showOver("Internet bilan muammo", "Pleyerni yuklab bo'lmadi. Internetni tekshirib, qaytadan urinib ko'ring."));
-  $("#pClose").focus();
-}
-function closePlayer() {
-  destroyYT(); $("#modal").hidden = true; document.body.style.overflow = ""; renderContinue();
-  if (location.hash.startsWith("#kino-")) history.replaceState(null, "", location.pathname + location.search);
-  lastFocus && lastFocus.focus && lastFocus.focus();
-}
-$("#pClose").onclick = closePlayer;
-$("#modal").addEventListener("click", e => { if (e.target.id === "modal") closePlayer(); });
-document.addEventListener("keydown", e => { if (!$("#modal").hidden && e.key === "Escape") closePlayer(); });
-$("#pFav").onclick = () => pFilm && toggleFav(pFilm.id);
-$("#pShare").onclick = () => {
-  const url = location.origin + location.pathname + "#kino-" + pFilm.id;
-  (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast("Havola nusxalandi")).catch(() => toast(url, 5000));
-};
-addEventListener("pagehide", saveProgress);
-
-/* ---------- Havola orqali kino ochish: sayt.uz/#kino-3 ---------- */
-function routeHash() { const m = location.hash.match(/^#kino-(\d+)$/); if (m) openPlayer(byId(+m[1])); }
-addEventListener("hashchange", routeHash);
-routeHash();
-
-/* ---------- Menyu belgisi ---------- */
-const navIds = ["bosh", "kinolar", "haqida"];
-addEventListener("scroll", () => {
-  let cur = "bosh";
-  navIds.forEach(id => { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top < 140) cur = id; });
-  if (scrollY < 200) cur = "bosh";
-  $$("nav.main a, .tabbar a").forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + cur || (cur === "kanallar" && a.closest(".tabbar") && a.getAttribute("href") === "#efir")));
-}, { passive: true });
-
-/* ---------- Ilova sifatida o'rnatish (PWA) ---------- */
-let deferredPrompt = null;
-const isStandalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-if (isStandalone) $("#installBtn").hidden = true;
-addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredPrompt = e; });
-$("#installBtn").onclick = async () => {
-  if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice.catch(() => {}); deferredPrompt = null; return; }
-  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) toast("Safari'da pastdagi «Ulashish» tugmasini bosing, so'ng «Bosh ekranga qo'shish»ni tanlang.", 6000);
-  else toast("Brauzer menyusidan «Ilovani o'rnatish» yoki «Bosh ekranga qo'shish»ni tanlang.", 6000);
-};
-if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+let hlsPromise=null;
+function loadHls(){if(window.Hls)return Promise.resolve(window.Hls);if(hlsPromise)return hlsPromise;hlsPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';s.async=true;s.onload=()=>window.Hls?resolve(window.Hls):reject(new Error('HLS kutubxonasi yuklanmadi'));s.onerror=reject;document.head.append(s);});return hlsPromise;}
+function closeModal(){cleanMedia();$('#modal').hidden=true;document.body.style.overflow='';currentFilm=null;currentTV=null;if(location.origin!=='null'&&/^#(?:kino|kanal|uzkanal)-/.test(location.hash))history.replaceState(null,'',location.pathname+location.search);lastFocus?.focus?.();}
+$('#pClose').onclick=closeModal;$('#modal').onclick=e=>{if(e.target===$('#modal'))closeModal();};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden)closeModal();});
+$('#pFav').onclick=()=>{if(currentFilm)favorite(currentFilm.id);};
+$('#pShare').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);toast('Havola nusxalandi');}catch{toast('Havola: '+location.href,5000);}};
+document.addEventListener('click',e=>{let b=e.target.closest('[data-fav]');if(b){favorite(Number(b.dataset.fav));return;}b=e.target.closest('[data-film]');if(b)openFilm(findFilm(Number(b.dataset.film)));});
+function route(){const k=location.hash.match(/^#kino-(\d+)$/),c=location.hash.match(/^#kanal-(\d+)$/),u=location.hash.match(/^#uzkanal-(\d+)$/);if(k){openFilm(findFilm(Number(k[1])));}else if(c){openTV(TV[Number(c[1])],Number(c[1]));}else if(u){openTV(UZ[Number(u[1])],Number(u[1]),true);}}
+addEventListener('hashchange',route);route();
+let installPrompt=null;const standalone=matchMedia('(display-mode:standalone)').matches||navigator.standalone;
+if(standalone)$('#installBtn').hidden=true;addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});
+$('#installBtn').onclick=async()=>{if(installPrompt){installPrompt.prompt();await installPrompt.userChoice.catch(()=>{});installPrompt=null;}else if(/iphone|ipad/i.test(navigator.userAgent))toast("Safari'da Ulashish → Bosh ekranga qo'shish ni tanlang.",5500);else toast("Brauzer menyusidan 'Ilovani o'rnatish' ni tanlang.",5000);};
+const ids=['bosh','kinolar','ozbek-kanallari','telekanallar','haqida'];addEventListener('scroll',()=>{let cur='bosh';for(const id of ids){if(document.getElementById(id)?.getBoundingClientRect().top<150)cur=id;}if(scrollY<200)cur='bosh';$$('nav.main a,.tabbar a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur));},{passive:true});
+if('serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();

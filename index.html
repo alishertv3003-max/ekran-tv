@@ -31,6 +31,8 @@
     <nav class="main" aria-label="Asosiy menyu">
       <a href="#bosh" class="on">Bosh sahifa</a>
       <a href="#kinolar">Kinolar</a>
+      <a href="#ozbek-kanallari">O‘zbek kanallari</a>
+      <a href="#telekanallar">Telekanallar</a>
       <a href="#haqida">Biz haqimizda</a>
     </nav>
     <div class="top-right">
@@ -89,12 +91,53 @@
   </section>
 
 
+  <section class="block tight uz-section" id="ozbek-kanallari">
+    <div class="wrap">
+      <div class="block-head">
+        <div><span class="eyebrow">O‘zbekiston jonli efiri</span><h2>O‘zbek kanallari</h2></div>
+        <span class="tv-count" id="uzCount" aria-live="polite">Kanallar yuklanmoqda…</span>
+      </div>
+      <div class="tv-controls">
+        <label class="tv-search-label">O‘zbek kanalini qidirish
+          <input type="search" id="uzSearch" placeholder="Masalan, Sevimli yoki Sport…" autocomplete="off">
+        </label>
+        <label class="tv-search-label">Kategoriya
+          <select id="uzCategory"><option value="">Barcha kategoriyalar</option></select>
+        </label>
+      </div>
+      <div class="tv-grid" id="uzGrid" aria-live="polite"></div>
+      <p class="tv-empty" id="uzEmpty" hidden>Bu nom bo‘yicha o‘zbek kanali topilmadi.</p>
+      <p class="tv-note">Kanallar <code>UZ.m3u</code> faylidan saralandi. HTTP va M3U ichidagi boshqa davlat kanallari chiqarildi. HD/SD belgisi faqat nomdan olingan; oqimlar jonli sinovdan o‘tmagan. Efir, CORS va namoyish huquqlari provayderga bog‘liq.</p>
+    </div>
+  </section>
+
+  <section class="block tight" id="telekanallar">
+    <div class="wrap">
+      <div class="block-head">
+        <div><span class="eyebrow">Jonli efir katalogi</span><h2>Telekanallar</h2></div>
+        <span class="tv-count" id="tvCount" aria-live="polite">Kanallar yuklanmoqda…</span>
+      </div>
+      <div class="tv-controls">
+        <label class="tv-search-label">Kanal qidirish
+          <input type="search" id="tvSearch" placeholder="Kanal nomini yozing…" autocomplete="off">
+        </label>
+        <label class="tv-search-label">Kategoriya
+          <select id="tvCategory"><option value="">Barcha kategoriyalar</option></select>
+        </label>
+      </div>
+      <div class="tv-grid" id="tvGrid" aria-live="polite"></div>
+      <p class="tv-empty" id="tvEmpty" hidden>Bu nom bo'yicha kanal topilmadi.</p>
+      <div class="tv-more-wrap"><button class="btn btn-ghost" id="tvMore" type="button" hidden>Yana kanallarni ko'rsatish</button></div>
+      <p class="tv-note">Kanal ro'yxatda bo'lishi efir ishlashini kafolatlamaydi. Xalqaro kanallar manbasidagi HTTP oqimlar HTTPS saytda bloklanishi mumkin. Faqat namoyish huquqi mavjud efirlardan foydalaning.</p>
+    </div>
+  </section>
+
   <section class="block tight" id="haqida">
     <div class="wrap">
       <div class="block-head"><div><span class="eyebrow">Biz haqimizda</span><h2>Nega Ekran TV</h2></div></div>
       <div class="about">
-        <div class="cell"><h3>O'zimizning kinolar</h3><p>Barcha kinolar va seriallar Ekran TV jamoasi tomonidan suratga olingan yoki huquqi bizga tegishli.</p></div>
-        <div class="cell"><h3>To'xtagan joydan davom eting</h3><p>Kinoni yarmida qoldirsangiz, keyingi safar sayt uni aynan to'xtagan joyingizdan davom ettiradi.</p></div>
+        <div class="cell"><h3>O'zimizning kinolar</h3><p>Platformada faqat namoyish qilishga tegishli ruxsati mavjud kontentni joylashtirish ko‘zda tutiladi.</p></div>
+        <div class="cell"><h3>Kinolar va telekanallar</h3><p>Kinolarni Fembed orqali, telekanallarni esa alohida katalogdan toping.</p></div>
         <div class="cell"><h3>Istalgan qurilmada</h3><p>Telefon, planshet, kompyuter va Smart TV brauzerida ishlaydi. Telefoningizga ilova sifatida o'rnating.</p></div>
       </div>
     </div>
@@ -111,6 +154,8 @@
 <nav class="tabbar" aria-label="Pastki menyu">
   <a href="#bosh" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Bosh</a>
   <a href="#kinolar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4"/></svg>Kinolar</a>
+  <a href="#ozbek-kanallari"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 22h8M12 19v3"/></svg>O‘zbek TV</a>
+  <a href="#telekanallar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 22h8M12 19v3"/></svg>Telekanallar</a>
   <a href="#haqida"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Biz haqimizda</a>
 </nav>
 
@@ -118,8 +163,7 @@
   <div class="player">
     <button class="close" type="button" id="pClose" aria-label="Yopish">✕</button>
     <div class="screen" id="screen">
-      <canvas id="pCanvas"></canvas>
-      <div class="yt" id="ytHost"></div>
+      <div class="yt" id="mediaHost"></div>
       <div class="over" id="pOver" hidden><div><h4 id="pOverTitle"></h4><p id="pOverText"></p></div></div>
     </div>
     <div class="pinfo">
@@ -144,6 +188,8 @@
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="data/films.js"></script>
+<script src="data/channels.js"></script>
+<script src="data/uz_channels.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
