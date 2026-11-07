@@ -9,3 +9,6 @@
 
 ## Ekran TV fullscreen player v2
 Site bundling uses latest `origin/main` at build time. The new TV player has D-pad channel switching, on-screen Back, pause, mute, fullscreen and a best-effort HLS 15-second latency target. Stream availability depends on licensing/provider. This build includes offline UI/catalog; playback still needs internet.
+
+## Xorijiy kanallarni sinash
+Ekran TV asosiy sayti barcha 1 461 ta kanal nomini saqlaydi. Ruxsatli M3U faylni import qilish uchun Telekanallar bo'limidan M3U yuklang; import faqat qurilmada vaqtincha ishlaydi va tokenlar GitHub'ga yuborilmaydi. Rasmiy HTTPS oqimlar tavsiya etiladi.
