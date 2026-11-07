@@ -126,7 +126,14 @@
           <select id="tvCategory"><option value="">Barcha kategoriyalar</option></select>
         </label>
       </div>
-      <div class="tv-grid" id="tvGrid" aria-live="polite"></div>
+      <div class="tv-note" style="margin:12px 0 18px;padding:15px;border:1px solid #6e617b;border-radius:12px">
+ <strong>Shaxsiy IPTV sinovi (faqat shu qurilmada)</strong>
+ <p>Ruxsatingiz bor M3U faylni tanlasangiz, kanallarning oqimlari faqat ochiq turgan sahifaga ulanadi. Fayl GitHub’ga yuborilmaydi yoki saqlanmaydi. Boshqa tomoshabinlarda ko‘rinmaydi.</p>
+ <label for="iptvLocalFile">M3U faylni tanlash</label>
+ <input id="iptvLocalFile" type="file" accept=".m3u,.m3u8,text/plain,audio/x-mpegurl,application/vnd.apple.mpegurl" style="display:block;margin:8px 0">
+ <p id="iptvLocalStatus" role="status">Muhim: HTTP manzillar HTTPS saytda bloklanadi. Ommaviy translatsiya uchun provayder ruxsati va HTTPS manba zarur.</p>
+ </div>
+ <div class="tv-grid" id="tvGrid" aria-live="polite"></div>
       <p class="tv-empty" id="tvEmpty" hidden>Bu nom bo'yicha kanal topilmadi.</p>
       <div class="tv-more-wrap"><button class="btn btn-ghost" id="tvMore" type="button" hidden>Yana kanallarni ko'rsatish</button></div>
       <p class="tv-note">Kanal ro'yxatda bo'lishi efir ishlashini kafolatlamaydi. Xalqaro kanallar manbasidagi HTTP oqimlar HTTPS saytda bloklanishi mumkin. Faqat namoyish huquqi mavjud efirlardan foydalaning.</p>
@@ -191,6 +198,7 @@
 <script src="data/films.js"></script>
 <script src="data/channels.js"></script>
 <script src="data/uz_channels.js"></script>
+<script src="js/iptv-local.js"></script>
 <script src="js/app.js"></script>
 <script src="js/tv-player.js"></script>
 </body>

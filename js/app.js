@@ -60,7 +60,7 @@ const categories=[...new Set(TV.map(t=>t.group||'Boshqa'))].sort((a,b)=>a.locale
 $('#tvCategory').innerHTML='<option value="">Barcha kategoriyalar</option>'+categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
 let tvQuery='',tvGroup='',tvVisible=72,tvFiltered=TV;
 function tvCard(ch,i,isUz=false){const logo=String(ch.logo||'');const safeLogo=/^https:\/\//i.test(logo)?logo:'';
- return `<button type="button" class="tv-card" ${isUz?`data-uz-tv="${i}"`:`data-tv="${i}"`} title="${esc(ch.name)}"><span class="tv-icon">${safeLogo?`<img src="${esc(safeLogo)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:esc(ch.name?.[0]||'TV')}</span><span class="tv-info"><strong>${esc(ch.name)}</strong><small>${esc(ch.group)}</small><span class="tv-live">● TELEKANAL${ch.quality?` · <b class="tv-quality">${esc(ch.quality)}</b>`:''}</span></span></button>`;}
+ return `<button type="button" class="tv-card" ${isUz?`data-uz-tv="${i}"`:`data-tv="${i}"`} title="${esc(ch.name)}"><span class="tv-icon">${safeLogo?`<img src="${esc(safeLogo)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:esc(ch.name?.[0]||'TV')}</span><span class="tv-info"><strong>${esc(ch.name)}</strong><small>${esc(ch.group)}</small><span class="tv-live">${/^https:\/\//i.test(ch.url||'')?'● EFIR MANZILI BOR':'○ MANBA ULANMAGAN'}${ch.quality?` · <b class="tv-quality">${esc(ch.quality)}</b>`:''}</span></span></button>`;}
 function renderTv(){tvFiltered=TV.map((ch,i)=>({...ch,_i:i})).filter(ch=>(!tvGroup||ch.group===tvGroup)&&(!tvQuery||(`${ch.name} ${ch.group}`).toLocaleLowerCase().includes(tvQuery)));
  const displayed=tvFiltered.slice(0,tvVisible);$('#tvGrid').innerHTML=displayed.map(ch=>tvCard(ch,ch._i)).join('');$('#tvEmpty').hidden=tvFiltered.length!==0;
  $('#tvCount').textContent=`${TV.length.toLocaleString('en-US')} ta kanal · ${tvFiltered.length} tasi ko'rsatilmoqda`;
@@ -70,6 +70,7 @@ $('#tvSearch').oninput=e=>{tvQuery=e.target.value.trim().toLocaleLowerCase();tvV
 $('#tvCategory').onchange=e=>{tvGroup=e.target.value;tvVisible=72;renderTv();};
 $('#tvMore').onclick=()=>{tvVisible+=96;renderTv();};
 $('#tvGrid').onclick=e=>{const b=e.target.closest('[data-tv]');if(b)openTV(TV[Number(b.dataset.tv)],Number(b.dataset.tv));};
+addEventListener('ekran-iptv-import',()=>{renderTv();});
 renderTv();
 
 /* O‘zbek kanallari: UZ.m3u katalogi, 1080p / 720p / SD nomli variantlar alohida. */
