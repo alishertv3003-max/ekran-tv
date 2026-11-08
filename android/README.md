@@ -15,3 +15,6 @@ Ekran TV asosiy sayti barcha 1 461 ta kanal nomini saqlaydi. Ruxsatli M3U faylni
 
 ## Minimalist player update
 The APK now bundles the latest public main branch: automatic fullscreen on channel selection (when the device allows), icon-only controls, and controls hidden after 2 seconds. Buffering indicator remains visible while buffering. No 15-second target label.
+
+## Fullscreen film player update
+The latest main branch is bundled into the APK at build time. Native HTTPS MP4/HLS films support TV-remote ±5-second seeking, pause/play and Stop; cross-origin Fembed embeds cannot expose playback controls to the wrapper without provider API support. International-channel catalog remains 1,461 items with safe metadata only (HTTP token-bearing URLs withheld from public repository).
