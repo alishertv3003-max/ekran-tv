@@ -73,7 +73,7 @@ $('#tvGrid').onclick=e=>{const b=e.target.closest('[data-tv]');if(b)openTV(TV[Nu
 addEventListener('ekran-iptv-import',()=>{renderTv();});
 renderTv();
 
-/* O‘zbek kanallari: UZ.m3u katalogi, 1080p / 720p / SD nomli variantlar alohida. */
+/* O‘zbek kanallari: yangi YOSSO M3U faylidagi Uzbekistan (UZ) guruhi. */
 const uzCategories=[...new Set(UZ.map(t=>t.group||'Boshqa'))].sort((a,b)=>a.localeCompare(b));
 $('#uzCategory').innerHTML='<option value="">Barcha kategoriyalar</option>'+uzCategories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
 let uzQuery='',uzGroup='';
@@ -81,7 +81,7 @@ function renderUz(){
  const matches=UZ.map((ch,i)=>({...ch,_i:i})).filter(ch=>(!uzGroup||ch.group===uzGroup)&&(!uzQuery||(`${ch.name} ${ch.group}`).toLocaleLowerCase().includes(uzQuery)));
  $('#uzGrid').innerHTML=matches.map(ch=>tvCard(ch,ch._i,true)).join('');
  $('#uzEmpty').hidden=matches.length!==0;
- $('#uzCount').textContent=`${UZ.length} ta oqim (HD/SD variantlar bilan) · ${matches.length} tasi ko‘rsatilmoqda`;
+ $('#uzCount').textContent=`${UZ.length} ta yangi o‘zbek kanali · ${matches.length} tasi ko‘rsatilmoqda`;
 }
 $('#uzSearch').oninput=e=>{uzQuery=e.target.value.trim().toLocaleLowerCase();renderUz();};
 $('#uzCategory').onchange=e=>{uzGroup=e.target.value;renderUz();};
