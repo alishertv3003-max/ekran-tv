@@ -92,7 +92,7 @@ const hideOverlay=()=>$('#pOver').hidden=true;
 function overlay(title,msg){$('#pOverTitle').textContent=title;$('#pOverText').textContent=msg;$('#pOver').hidden=false;}
 function cleanMedia(){if(hlsObj){try{hlsObj.destroy()}catch{}hlsObj=null;}if(videoEl){try{videoEl.pause();videoEl.removeAttribute('src');videoEl.load()}catch{}videoEl=null;}$('#mediaHost').replaceChildren();}
 function openModal(){if($('#modal').hidden)lastFocus=document.activeElement;cleanMedia();hideOverlay();$('#modal').hidden=false;document.body.style.overflow='hidden';$('#pClose').focus();}
-function openFilm(f){if(!f)return;window.EKRAN_TV_PLAYER?.close();currentFilm=f;currentTV=null;openModal();
+function openFilm(f){if(!f)return;if(window.EKRAN_FILM_PLAYER){window.EKRAN_TV_PLAYER?.close();window.EKRAN_FILM_PLAYER.open(f);return;}window.EKRAN_TV_PLAYER?.close();currentFilm=f;currentTV=null;openModal();
  $('#pTitle').textContent=f.title;$('#pGenre').textContent=f.genre||'Kino';$('#pMeta').innerHTML=meta(f);$('#pDesc').textContent=f.description||'';
  $('#pFav').hidden=false;$('#similarWrap').hidden=false;$('#similar').innerHTML=FILMS.filter(x=>x.id!==f.id).slice(0,6).map(x=>`<button class="card" type="button" data-film="${x.id}">${poster(x)}</button>`).join('');syncFavorite();
  if(location.origin!=='null'&&location.hash!==`#kino-${f.id}`) history.replaceState(null,'',`#kino-${f.id}`);
