@@ -25,9 +25,10 @@ jobs:
             git archive origin/main "$item" | tar -x -C android/app/src/main/assets/site
           done
           grep -q 'Oilaviy video' android/app/src/main/assets/site/data/films.js
-          grep -q 'window.UZ_CHANNELS' android/app/src/main/assets/site/data/uz_channels.js
-          grep -q 'window.TV_CHANNELS' android/app/src/main/assets/site/data/channels.js
+          test ! -e android/app/src/main/assets/site/data/uz_channels.js
+          test ! -e android/app/src/main/assets/site/data/channels.js
           test ! -e android/app/src/main/assets/site/data/private-iptv.txt
+          ! grep -q 'ozbek-kanallari' android/app/src/main/assets/site/index.html
       - name: Install Android SDK 35
         run: |
           export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
