@@ -1,207 +1,66 @@
 <!doctype html>
-<html lang="uz">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ekran TV — Admin panel</title>
-<meta name="robots" content="noindex,nofollow">
+<html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ekran TV — Kinolar admin paneli</title><meta name="robots" content="noindex,nofollow">
 <style>
-:root{color-scheme:dark;--bg:#0e0c18;--panel:#17142a;--s:#221d38;--border:#39314e;--text:#f5f1ff;--muted:#b4aacd;--gold:#f4b63f;--bad:#ff8287}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text);background:var(--bg);line-height:1.55}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}
-a{color:var(--gold)}header{position:sticky;top:0;background:#151223ec;border-bottom:1px solid var(--border);z-index:10;backdrop-filter:blur(14px)}.wrap{max-width:1100px;margin:auto;padding:18px 20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center}.logo{font-size:20px;font-weight:800}.gold{color:var(--gold)}.sub{color:var(--muted);font-size:13px}.tabs{display:flex;gap:8px;overflow:auto;margin:26px 0 20px}.tabs button{border:1px solid var(--border);border-radius:50px;background:var(--panel);color:var(--muted);white-space:nowrap;padding:9px 16px}.tabs button[aria-selected=true]{color:var(--bg);background:var(--gold);border-color:var(--gold);font-weight:700}.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:18px}.stack{display:flex;flex-direction:column;gap:15px}.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.row.between{justify-content:space-between}.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.three{grid-template-columns:repeat(3,minmax(0,1fr))}label.field{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:13px;font-weight:650}input:not([type=checkbox]):not([type=file]),select,textarea{width:100%;background:#0e0c18;border:1px solid var(--border);border-radius:10px;padding:11px 12px;color:var(--text);outline-offset:2px}textarea{min-height:90px;resize:vertical}input[type=file]{width:100%;max-width:100%;font-size:13px}.btn{border:1px solid var(--border);background:var(--s);color:var(--text);padding:9px 16px;border-radius:9px;font-weight:700}.btn.primary{background:var(--gold);border-color:var(--gold);color:#1e1405}.btn.danger{color:#ff8888}.hint{font-size:12px;color:var(--muted)}.warn{padding:13px 15px;border:1px solid #8f6430;border-radius:11px;background:#2d2418;color:#efd5a6;font-size:13px}.status{padding:11px 13px;border-radius:10px;background:var(--s);color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}.status.bad{color:var(--bad)}.status.ok{color:#a9edb8}.movie{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:15px;align-items:center;padding:12px;border:1px solid var(--border);border-radius:12px;margin-bottom:9px}.poster{width:52px;height:74px;border-radius:7px;background:linear-gradient(150deg,#51418e,#251b45);object-fit:cover}.movie h3{margin:0;font-size:15px}.movie p{font-size:12px;color:var(--muted);margin:4px 0}.movie .row{justify-content:flex-end}.preview{max-height:150px;max-width:110px;object-fit:cover;border-radius:9px;border:1px solid var(--border)}h1{font-size:24px;margin:0 0 4px}h2{font-size:20px;margin:0 0 7px}p{margin:6px 0}code{overflow-wrap:anywhere}.muted{color:var(--muted)}.metrics{display:flex;gap:20px;flex-wrap:wrap}.metrics b{font-size:22px;display:block;color:var(--gold)}.footer{padding:24px 0 80px;color:var(--muted);font-size:12px}.bar{position:sticky;bottom:0;padding:12px 0;background:#0e0c18ed;border-top:1px solid var(--border);z-index:10}.hidden,[hidden]{display:none!important}
-@media(max-width:700px){.cols,.three{grid-template-columns:1fr}.wrap{padding:14px}.card{padding:15px}.movie{grid-template-columns:40px minmax(0,1fr)}.movie>.row{grid-column:1/-1;justify-content:flex-start}.poster{width:40px;height:60px}}
-</style>
-</head>
-<body>
-<header><div class="wrap head"><div class="logo"><span class="gold">▶</span> Ekran TV <span class="sub">· Admin panel</span></div><div class="sub" id="connectionBadge">Mahalliy rejim</div></div></header>
-<main class="wrap">
-<h1>Platforma boshqaruvi</h1><p class="muted">Filmlar uchun Fembed yoki ixtiyoriy bevosita HTTPS video; telekanallar uchun M3U katalogi.</p>
-<nav class="tabs" role="tablist"><button type="button" data-tab="films" aria-selected="true">Kinolar</button><button type="button" data-tab="channels" aria-selected="false">Telekanallar</button><button type="button" data-tab="uzchannels" aria-selected="false">O‘zbek kanallari</button><button type="button" data-tab="settings" aria-selected="false">GitHub ulanish</button><button type="button" data-tab="install" aria-selected="false">Saytni o‘rnatish</button></nav>
-<section data-panel="films">
-<div class="card"><div class="row between"><div><h2>Kinolar</h2><p class="sub" id="filmCount"></p></div><button class="btn primary" id="newFilm" type="button">＋ Kino qo‘shish</button></div><div id="filmList"></div></div>
-<form id="filmForm" class="card stack" hidden>
-<div class="row between"><h2 id="filmHeading">Yangi kino</h2><button type="button" class="btn" id="cancelFilm">Bekor qilish</button></div>
-<label class="field">Fembed havolasi (boshqa havola qabul qilinmaydi)<input id="filmVideo" type="url" placeholder="https://fembed.co/embed/P3z_kD-G5puOo" autocomplete="off"><span class="hint">Faqat <code>https://fembed.co/embed/VIDEO_ID</code>. Havola bo‘sh bo‘lsa, kino «Tez orada» bo‘lib turadi.</span></label>
-<label class="field">To‘g‘ridan-to‘g‘ri HTTPS video (ixtiyoriy)<input id="filmDirect" type="url" placeholder="https://video-host.example/film.mp4" autocomplete="off"><span class="hint">Faqat o‘zingiz namoyish qilishga haqli bo‘lgan HTTPS .mp4, .webm, .m4v yoki .m3u8 video. Shu manbada pult orqali ±5 soniya va pauza ishlaydi. Fembed iframe ichini saytdan boshqarib bo‘lmaydi.</span></label>
-<div class="cols"><label class="field">Kino nomi *<input id="filmTitle" type="text" required></label><label class="field">Janr *<input id="filmGenre" type="text" required></label></div>
-<div class="cols three"><label class="field">Yili<input id="filmYear" type="number" min="1900" max="2100"></label><label class="field">Davomiyligi (daq.)<input id="filmDur" type="number" min="0" max="999"></label><label class="field">Reyting (0–10)<input id="filmRating" type="number" min="0" max="10" step="0.1"></label></div>
-<div class="cols"><label class="field">Yosh chegarasi<select id="filmAge"><option>0+</option><option>6+</option><option selected>12+</option><option>16+</option><option>18+</option></select></label><label class="field">Poster URL (ixtiyoriy)<input id="posterUrl" type="text" placeholder="posters/rasm.jpg yoki https://..."></label></div>
-<label class="field">Yoki poster rasmini tanlang<input type="file" id="posterFile" accept="image/jpeg,image/png,image/webp"><span class="hint">Rasmni GitHub’ga avtomatik chiqarish uchun ulanish kerak. GitHubsiz eksportda poster faylini alohida yuklab olasiz.</span></label>
-<img class="preview" id="posterPreview" hidden alt="Poster ko‘rinishi">
-<label class="field">Qisqa tavsif<textarea id="filmDesc" maxlength="500"></textarea></label>
-<label><input id="filmHero" type="checkbox"> Bosh sahifada katta ko‘rsatish</label>
-<div class="status bad" id="filmError" hidden></div>
-<div class="row"><button class="btn primary" type="submit">Saqlash</button></div>
-</form>
-</section>
-<section data-panel="channels" hidden>
-<div class="card stack"><h2>Telekanallar</h2><div class="metrics"><div><b id="channelTotal">0</b><span class="sub">jami kanal</span></div><div><b id="channelGroups">0</b><span class="sub">kategoriya</span></div><div><b id="httpTotal">0</b><span class="sub">HTTP oqim</span></div></div>
-<p class="sub">Xalqaro telekanallar <code>data/channels.js</code> faylidan ochiladi. O‘zbek kanallari alohida bo‘limda saqlanadi. M3U importdan keyin o‘zgarishlarni GitHub’ga chiqarish yoki faylni eksport qilish mumkin.</p>
-<label class="field">Xalqaro M3U IPTV ro‘yxati<input id="m3uFile" type="file" accept=".m3u,.m3u8,text/plain"></label>
-<div class="warn">Diqqat: ushbu IPTV ro‘yxatidagi HTTP oqimlar HTTPS saytda ochilmasligi mumkin. Tokenli havolalarni ommaviy GitHub repository’ga yuklasangiz, ular hammaga ko‘rinadi. Faqat huquqingiz bo‘lgan kanallarni e’lon qiling.</div>
-<div class="row"><button id="exportChannels" class="btn" type="button">channels.js faylini yuklab olish</button><button id="publishChannels" class="btn primary" type="button">Telekanallarni GitHub’ga chiqarish</button></div><div class="status" id="channelMsg" hidden></div></div>
-</section>
-<section data-panel="uzchannels" hidden>
-<div class="card stack"><h2>O‘zbek kanallari</h2><div class="metrics"><div><b id="uzTotal">0</b><span class="sub">O‘zbekiston kanali</span></div><div><b id="uzGroups">0</b><span class="sub">kategoriya</span></div><div><b id="uzHttpTotal">0</b><span class="sub">HTTP oqim</span></div></div>
-<p class="sub">Faqat O‘zbekiston kanallari <code>data/uz_channels.js</code> faylida saqlanadi. UZ.m3u dan saralangan manbalar uchun internetda alohida tekshiruv zarur. Xalqaro telekanallar ro‘yxatiga qo‘shilmaydi.</p>
-<label class="field">Yangi o‘zbek IPTV M3U fayli<input id="uzM3uFile" type="file" accept=".m3u,.m3u8,text/plain"></label>
-<div class="warn">Jonli efirlarni ommaga tarqatish uchun huquq va ruxsat zarur. HTTPS manzillari ham provayder sozlamasiga bog‘liq.</div>
-<div class="row"><button id="exportUz" class="btn" type="button">uz_channels.js faylini yuklab olish</button><button id="publishUz" class="btn primary" type="button">O‘zbek kanallarini GitHub’ga chiqarish</button></div><div class="status" id="uzMsg" hidden></div></div>
-</section>
-<section data-panel="settings" hidden>
-<div class="card stack"><h2>GitHub’ga ulanish</h2><p class="sub">Ulanganingizdan so‘ng admin panel filmlar va kanallarni repository’ga yangilaydi. Token faqat joriy tab sessiyasida saqlanadi, sayt kodiga yozilmaydi.</p>
-<div class="cols three"><label class="field">Login<input id="owner" autocomplete="off"></label><label class="field">Repository<input id="repo" autocomplete="off"></label><label class="field">Branch<input id="branch" autocomplete="off"></label></div>
-<label class="field">GitHub fine-grained token<input id="token" type="password" autocomplete="off" placeholder="github_pat_..."><span class="hint">Faqat bitta repository uchun Contents: Read and write ruxsatini bering. Tokenni hech kimga yubormang.</span></label>
-<div class="row"><button class="btn primary" type="button" id="connect">Ulanish va yangilarini olish</button><button class="btn" type="button" id="disconnect">Tokenni o‘chirish</button><button class="btn" type="button" id="reload">GitHub’dan qayta o‘qish</button></div><div class="status" id="connectMsg" hidden></div></div>
-</section>
-<section data-panel="install" hidden>
-<div class="card stack"><h2>Saytni GitHub’ga o‘rnatish</h2><p class="sub">Bu imkoniyat ZIP ichidagi <code>ekran-tv-tools/ekran-tv-panel.html</code> faylida ishlaydi. U butun sayt fayllarini GitHub repository’ga yuklaydi. Oddiy <code>admin.html</code> esa saytga kino va telekanal yangilash uchun.</p>
-<div class="warn">Eslatma: xalqaro <code>data/channels.js</code> faylida HTTP oqimlar va URL tokenlari mavjud. Faylni ommaga yuklashdan oldin provayder ruxsati va token xavfsizligini tekshiring.</div>
-<div class="row"><button type="button" class="btn primary" id="installBtn">Sayt fayllarini GitHub’ga joylash</button></div><div id="installInfo" class="status"></div><div id="installLog" class="status" hidden></div>
-</section>
-<div class="bar"><div class="row between"><span class="sub" id="changeText">O‘zgarish yo‘q</span><div class="row"><button id="exportFilms" type="button" class="btn">films.js yuklab olish</button><button id="publishFilms" type="button" class="btn primary">Kinolarni saytga chiqarish</button></div></div></div>
-<div class="footer">Ekran TV · GitHub Pages statik sayt · Xavfsiz ishlash uchun admin panelni faqat o‘zingiz ishlating.</div>
-</main>
-<script src="data/films.js"></script>
-<script src="data/channels.js"></script>
-<script src="data/uz_channels.js"></script>
-<script>
-const SITE_FILES = /*__FILES__*/null;
-(() => {
-'use strict';
-const $=q=>document.querySelector(q), $$=q=>[...document.querySelectorAll(q)];
-const setMsg=(el,msg,bad=false)=>{el.textContent=msg;el.hidden=false;el.classList.toggle('bad',bad);el.classList.toggle('ok',!bad);};
-const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let SITE=JSON.parse(JSON.stringify(window.SITE||{name:'Ekran TV',heroFilmId:90001}));
-let FILMS=JSON.parse(JSON.stringify(window.FILMS||[])).map(f=>{delete f.youtube;return f;});
-let TV=JSON.parse(JSON.stringify(window.TV_CHANNELS||[]));
-let UZTV=JSON.parse(JSON.stringify(window.UZ_CHANNELS||[]));
-let baseFilms='',baseChannels='',baseUz='',pendingPosters={};
-let editId=null,posterFile=null,connected=false;
-const config={owner:'alishertv3003-max',repo:'ekran-tv',branch:'main',token:''};
-try{Object.assign(config,JSON.parse(sessionStorage.getItem('ekran-github')||'{}'));}catch{}
-for(const k of ['owner','repo','branch','token'])$('#'+k).value=config[k]||'';
-function tab(name){$$('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==name);$$('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===name)));}
-$$('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
-function slug(s){return s.toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,35)||'kino';}
-function movieVideo(v){
- if(!v)return '';
- try{const u=new URL(v),m=u.pathname.match(/^\/(?:embed|v)\/([A-Za-z0-9_-]+)\/?$/);if(u.protocol==='https:'&&['fembed.co','www.fembed.co'].includes(u.hostname.toLowerCase())&&m)return 'https://fembed.co/embed/'+m[1];}catch{}
- return null;
-}
-function directMovieVideo(v){
- if(!v)return '';
- try {const u=new URL(v);return u.protocol==='https:' && /\.(?:mp4|m4v|webm|m3u8)$/i.test(u.pathname)?u.href:null;}catch{return null;}
-}
-function jsonText(v){return JSON.stringify(v,null,2);}
-function filmsJs(){return `/* Ekran TV kinolari — Fembed (video) va ixtiyoriy bevosita HTTPS video (directVideo) */\nwindow.SITE = ${jsonText(SITE)};\nwindow.FILMS = ${jsonText(FILMS.map(f=>{const x={...f};delete x.youtube;return x;}))};\n`;}
-function channelsJs(){return `/* Ekran TV M3U katalogi — HTTP va tokenli URLlarni ommaga chiqarishdan oldin huquqni tekshiring. */\nwindow.TV_CHANNELS = ${JSON.stringify(TV)};\n`;}
-function uzChannelsJs(){return `/* Ekran TV — O‘zbek kanallari, data/uz_channels.js */\nwindow.UZ_CHANNELS = ${JSON.stringify(UZTV)};\n`;}
-function bytesB64(bytes){let s='';for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(s);}
-const b64text=t=>bytesB64(new TextEncoder().encode(t));
-const unb64=x=>new TextDecoder().decode(Uint8Array.from(atob(x.replace(/\s/g,'')),c=>c.charCodeAt(0)));
-async function github(path,method='GET',body=null){if(!config.token)throw Error('GitHub tokeni kiritilmagan. Ulanish bo‘limiga o‘ting.');
- const url=`https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}${path}`;
- let res;try{res=await fetch(url,{method,headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+config.token,'X-GitHub-Api-Version':'2022-11-28',...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});}catch{throw Error('GitHub bilan bog‘lanib bo‘lmadi. Internetni tekshiring.');}
- let d;try{d=await res.json();}catch{d={};}
- if(!res.ok&&res.status!==404)throw Error(`GitHub xato ${res.status}: ${(d.message||'Ruxsat yoki repository sozlamasini tekshiring.').slice(0,180)}`);
- return {ok:res.ok,status:res.status,data:d};
-}
-async function getFile(name){const r=await github(`/contents/${name.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(config.branch)}`);return r.ok?r.data:null;}
-async function putFile(name,b64){const cur=await getFile(name),body={message:'Ekran TV: '+name+' yangilandi',content:b64,branch:config.branch};if(cur?.sha)body.sha=cur.sha;
- const r=await github(`/contents/${name.split('/').map(encodeURIComponent).join('/')}`,'PUT',body);return r.data;}
-function renew(){baseFilms=JSON.stringify({SITE,FILMS});baseChannels=JSON.stringify(TV);baseUz=JSON.stringify(UZTV);}
-function changed(){return JSON.stringify({SITE,FILMS})!==baseFilms||Object.keys(pendingPosters).length>0;}
-function updateBar(){$('#changeText').textContent=changed()?'Kinolar bo‘yicha saqlanmagan o‘zgarishlar bor':'Kino ma’lumotlari tayyor';$('#filmCount').textContent=`${FILMS.length} ta kino · ${FILMS.filter(f=>!!movieVideo(f.video)).length} ta Fembed havolali`;}
-function fileDownload(filename,content,mime='application/javascript'){const blob=new Blob([content],{type:mime}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);}
-function drawMovies(){updateBar();$('#filmList').innerHTML=FILMS.map(f=>{const img=String(f.poster||'');const safe=/^(https:\/\/|posters\/)/.test(img)?img:'';
-return `<article class="movie">${safe?`<img class="poster" src="${esc(safe)}" loading="lazy" alt="">`:'<div class="poster"></div>'}<div><h3>${esc(f.title)}</h3><p>${esc(f.genre)} ${Number(f.year)>0?'· '+esc(f.year):''} ${SITE.heroFilmId===f.id?'· ★ Bosh sahifa':''}</p><p>${movieVideo(f.video)?'✓ Fembed ulangan':'Video qo‘shilmagan'}</p></div><div class="row"><button class="btn" data-edit="${f.id}" type="button">Tahrirlash</button><button class="btn danger" data-del="${f.id}" type="button">O‘chirish</button></div></article>`;}).join('')||'<p class="muted">Kinolar yo‘q. «Kino qo‘shish» ni bosing.</p>';}
-function drawChannels(){const http=TV.filter(x=>String(x.url||'').startsWith('http://')).length;$('#channelTotal').textContent=TV.length;$('#channelGroups').textContent=new Set(TV.map(c=>c.group)).size;$('#httpTotal').textContent=http;$('#uzTotal').textContent=UZTV.length;$('#uzGroups').textContent=new Set(UZTV.map(c=>c.group)).size;$('#uzHttpTotal').textContent=UZTV.filter(x=>String(x.url||'').startsWith('http://')).length;}
-function movieForm(id){editId=id;posterFile=null;$('#posterFile').value='';$('#filmError').hidden=true;
- const f=id==null?null:FILMS.find(x=>Number(x.id)===id);$('#filmHeading').textContent=f?'Kinoni tahrirlash':'Yangi kino';
- for(const [key,val] of Object.entries({filmTitle:f?.title||'',filmVideo:f?.video||'',filmDirect:f?.directVideo||'',filmGenre:f?.genre||'',filmYear:f?((Number(f.year)>0)?f.year:''):new Date().getFullYear(),filmDur:f?.duration??90,filmAge:f?.age||'12+',filmRating:f?.rating??8,filmDesc:f?.description||'',posterUrl:f?.poster||''}))$('#'+key).value=val;
- $('#filmHero').checked=f?SITE.heroFilmId===f.id:false;
- $('#posterPreview').hidden=!f?.poster;if(f?.poster)$('#posterPreview').src=f.poster;
- $('#filmForm').hidden=false;$('#filmForm').scrollIntoView({behavior:'smooth',block:'start'});$('#filmVideo').focus();}
-$('#newFilm').onclick=()=>movieForm(null);
-$('#cancelFilm').onclick=()=>$('#filmForm').hidden=true;
-$('#filmList').onclick=e=>{const ed=e.target.closest('[data-edit]'),dl=e.target.closest('[data-del]');if(ed)movieForm(Number(ed.dataset.edit));if(dl){const id=Number(dl.dataset.del),f=FILMS.find(x=>x.id===id);if(!f||!confirm(`“${f.title}” filmini o‘chirasizmi?`))return;FILMS=FILMS.filter(x=>x.id!==id);if(SITE.heroFilmId===id)SITE.heroFilmId=FILMS[0]?.id||null;drawMovies();}};
-$('#posterFile').onchange=e=>{posterFile=e.target.files?.[0]||null;if(!posterFile)return;const u=URL.createObjectURL(posterFile);$('#posterPreview').src=u;$('#posterPreview').hidden=false;};
-$('#filmForm').onsubmit=async e=>{e.preventDefault();const name=$('#filmTitle').value.trim(),genre=$('#filmGenre').value.trim(),link=movieVideo($('#filmVideo').value.trim()),direct=directMovieVideo($('#filmDirect').value.trim());
- if(!name||!genre||link===null||direct===null){setMsg($('#filmError'),!name?'Kino nomini yozing.':!genre?'Janrni kiriting.':link===null?'Fembed havolasi noto‘g‘ri.':'To‘g‘ridan-to‘g‘ri HTTPS video .mp4, .webm, .m4v yoki .m3u8 bo‘lishi kerak.',true);return;}
- let f=editId==null?null:FILMS.find(x=>Number(x.id)===editId);
- if(!f){const id=Math.max(0,...FILMS.map(x=>Number(x.id)||0))+1;f={id,colors:['#253047','#7c5ca8','#e6cfff']};FILMS.push(f);}
- Object.assign(f,{title:name,genre,video:link||'',directVideo:direct||'',year:Number($('#filmYear').value)||0,duration:Math.max(0,Number($('#filmDur').value)||0),rating:Number($('#filmRating').value)||0,age:$('#filmAge').value,description:$('#filmDesc').value.trim(),poster:$('#posterUrl').value.trim()});delete f.youtube;
- if(posterFile){const ext=posterFile.type==='image/png'?'png':posterFile.type==='image/webp'?'webp':'jpg';const path=`posters/${slug(name)}-${f.id}.${ext}`;pendingPosters[path]=posterFile;f.poster=path;}
- if($('#filmHero').checked)SITE.heroFilmId=f.id;else if(SITE.heroFilmId===f.id)SITE.heroFilmId=FILMS[0]?.id??null;
- $('#filmForm').hidden=true;drawMovies();};
-$('#exportFilms').onclick=()=>{fileDownload('films.js',filmsJs());for(const [name,file] of Object.entries(pendingPosters))fileDownload(name.split('/').pop(),file,'application/octet-stream');};
-$('#exportChannels').onclick=()=>fileDownload('channels.js',channelsJs());
-$('#exportUz').onclick=()=>fileDownload('uz_channels.js',uzChannelsJs());
-function parseM3u(text){
- const lines=text.split(/\r?\n/);let entry=null,channels=[];
- for(let line of lines){line=line.trim();if(line.startsWith('#EXTINF:')){const a={};for(const m of line.matchAll(/([\w-]+)="([^"]*)"/g))a[m[1]]=m[2];entry={name:line.includes(',')?line.slice(line.lastIndexOf(',')+1).trim():(a['tvg-name']||'Nomsiz kanal'),group:a['group-title']||'Boshqa',logo:a['tvg-logo']||'',tvgId:a['tvg-id']||''};}
- else if(entry&&line&&!line.startsWith('#')){if(/^https?:\/\//i.test(line))channels.push({...entry,url:line});entry=null;}}
- return channels;
-}
-function isUz(c){return /uzbekistan|o.zbekiston/i.test(String(c.group||'')) || /\.uz@/i.test(String(c.tvgId||''));}
-async function importM3u(e,scope){
- const file=e.target.files?.[0];if(!file)return;
- const msg=$(scope==='uz'?'#uzMsg':'#channelMsg');
- if(file.size>8*1024*1024){setMsg(msg,'M3U fayli 8 MB dan katta.',true);return;}
- const text=await file.text();if(!text.trimStart().startsWith('#EXTM3U')){setMsg(msg,'M3U fayli xato: #EXTM3U boshlanishi kerak.',true);return;}
- const parsed=parseM3u(text);
- if(!parsed.length){setMsg(msg,'Kanallar topilmadi.',true);return;}
- if(scope==='uz'){const valid=parsed.filter(c=>/^https:\/\//i.test(c.url)&&new URL(c.url).pathname.toLowerCase().endsWith('.m3u8'));let seen=new Set();UZTV=valid.filter(c=>!seen.has(c.url)&&seen.add(c.url)).map(c=>({...c,quality:(c.name.match(/(?:^|\s)(FHD|HD|SD)(?:\s|$)/i)?.[1]||'').toUpperCase()}));setMsg(msg,`${UZTV.length} ta HTTPS HLS manzili import qilindi; ${parsed.length-UZTV.length} ta HTTP, boshqa format yoki takroriy manzil chiqarildi. Efirning ishlashi avtomatik tekshirilmagan.`);}
- else{TV=parsed.filter(c=>!isUz(c));setMsg(msg,`${TV.length} ta xalqaro kanal import qilindi. O‘zbekiston kanallari alohida bo‘limga joylanadi.`);}
- drawChannels();
-}
-$('#m3uFile').onchange=e=>importM3u(e,'world');
-$('#uzM3uFile').onchange=e=>importM3u(e,'uz');
-$('#connect').onclick=async()=>{for(const k of ['owner','repo','branch','token'])config[k]=$('#'+k).value.trim();if(!config.owner||!config.repo||!config.token){setMsg($('#connectMsg'),'GitHub ma’lumotlari va tokenni kiriting.',true);return;}
- try{const r=await github('');if(!r.ok)throw Error('Repository topilmadi.');sessionStorage.setItem('ekran-github',JSON.stringify(config));connected=true;$('#connectionBadge').textContent=`✓ ${config.owner}/${config.repo}`;setMsg($('#connectMsg'),'GitHub ulandi. Hozirgi ma’lumotlar o‘qilmoqda.');await readRemote();}catch(err){connected=false;setMsg($('#connectMsg'),err.message,true);}};
-$('#disconnect').onclick=()=>{config.token='';$('#token').value='';sessionStorage.removeItem('ekran-github');connected=false;$('#connectionBadge').textContent='Mahalliy rejim';setMsg($('#connectMsg'),'GitHub tokeni sessiyadan o‘chirildi.');};
-async function readRemote(){
- if(changed()&&!confirm('Mahalliy kinolar o‘zgarishi bor. GitHub’dagi fayllar bilan almashtiraymi?'))return;
- try{const f=await getFile('data/films.js');if(f?.content){const w={};new Function('window',unb64(f.content))(w);SITE=w.SITE||SITE;FILMS=(w.FILMS||[]).map(x=>{delete x.youtube;return x;});}
- const c=await getFile('data/channels.js');if(c?.content){const w={};new Function('window',unb64(c.content))(w);TV=w.TV_CHANNELS||TV;}
- const uc=await getFile('data/uz_channels.js');if(uc?.content){const w={};new Function('window',unb64(uc.content))(w);UZTV=w.UZ_CHANNELS||UZTV;}
- pendingPosters={};renew();drawMovies();drawChannels();setMsg($('#connectMsg'),'GitHub’dagi kinolar, telekanallar va O‘zbek kanallari yangilandi.');}catch(err){setMsg($('#connectMsg'),'Fayllarni o‘qishda xato: '+err.message,true);}
-}
-$('#reload').onclick=readRemote;
-async function publishFilms(){if(!connected){alert('Avval «GitHub ulanish» bo‘limida token bilan ulaning yoki films.js faylini yuklab oling.');return;}
- const button=$('#publishFilms');button.disabled=true;button.textContent='Yuklanmoqda…';
- try{for(const [path,file] of Object.entries(pendingPosters)){const b64=bytesB64(new Uint8Array(await file.arrayBuffer()));await putFile(path,b64);}
- await putFile('data/films.js',b64text(filmsJs()));pendingPosters={};baseFilms=JSON.stringify({SITE,FILMS});updateBar();alert('Kinolar GitHub’ga joylandi. Saytda yangilanishi biroz vaqt olishi mumkin.');}catch(e){alert(e.message);}finally{button.disabled=false;button.textContent='Kinolarni saytga chiqarish';}}
-$('#publishFilms').onclick=publishFilms;
-$('#publishChannels').onclick=async()=>{
- if(!connected){setMsg($('#channelMsg'),'Avval GitHub ulanish bo‘limida ulaning, yoki channels.js faylini eksport qiling.',true);return;}
- if(!confirm('Kanallar ro‘yxati va URL tokenlari GitHub repository’ga yoziladi. Tegishli huquq va ruxsatingiz bormi?'))return;
- const b=$('#publishChannels');b.disabled=true;
- try{await putFile('data/channels.js',b64text(channelsJs()));baseChannels=JSON.stringify(TV);setMsg($('#channelMsg'),'Kanallar GitHub’ga chiqarildi.');}catch(e){setMsg($('#channelMsg'),e.message,true);}finally{b.disabled=false;}
+:root{color-scheme:dark;--bg:#0f0d1b;--panel:#1b172f;--border:#453b63;--text:#f7f2ff;--muted:#b7aec9;--gold:#f7c146}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;line-height:1.45}
+main{max-width:1050px;margin:auto;padding:24px 18px 70px}h1{font-size:26px}h2{font-size:19px}a{color:var(--gold)}
+.card{border:1px solid var(--border);border-radius:14px;background:var(--panel);padding:20px;margin:18px 0}
+button,input,textarea,select{font:inherit}button{cursor:pointer;padding:11px 15px;background:#352a4f;color:white;border:1px solid var(--border);border-radius:10px}
+button.primary{background:var(--gold);color:#211726;font-weight:800}button.danger{color:#ffc1c1}
+label{display:block;color:var(--muted);font-size:13px;margin:12px 0 4px}input,textarea,select{width:100%;background:#101020;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:11px}
+textarea{min-height:94px}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.grow{flex:1}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.small{font-size:13px;color:var(--muted)}
+.movie{border-top:1px solid var(--border);padding:12px 0;display:flex;align-items:center;gap:15px}.movie strong{display:block}.movie .buttons{margin-left:auto;white-space:nowrap}
+#status{padding:11px;background:#2a2440;border-radius:8px;white-space:pre-wrap}.warn{color:#f4d19d}
+[hidden]{display:none!important}@media(max-width:600px){.grid{grid-template-columns:1fr}.movie{align-items:flex-start;flex-wrap:wrap}.movie .buttons{margin-left:0}}
+</style></head><body><main>
+<div class="row"><h1 class="grow">▶ Ekran TV — Kinolar boshqaruvi</h1><a href="./">Saytga qaytish</a></div>
+<p class="small">Telekanallar butunlay olib tashlandi. Faqat kinolar katalogi boshqariladi.</p>
+<section class="card"><div class="row"><h2 class="grow">Kinolar ro‘yxati (<span id="count"></span>)</h2><button class="primary" id="addFilm">＋ Kino qo‘shish</button></div><div id="movies"></div></section>
+<section class="card" id="editor" hidden><div class="row"><h2 class="grow" id="editHeading">Kino</h2><button id="cancel" type="button">Bekor qilish</button></div>
+<form id="movieForm">
+<div class="grid"><div><label for="title">Kino nomi *</label><input id="title" required></div><div><label for="genre">Janr *</label><input id="genre" required></div></div>
+<label for="video">Fembed havolasi</label><input id="video" type="url" placeholder="https://fembed.co/embed/VIDEO_ID"><p class="small">Faqat fembed.co/embed/ID formatidagi havola qabul qilinadi.</p>
+<div class="grid"><div><label for="year">Yili</label><input id="year" type="number" min="1900" max="2100"></div><div><label for="duration">Davomiyligi, daqiqa</label><input id="duration" type="number" min="0"></div><div><label for="age">Yosh chegarasi</label><select id="age"><option>0+</option><option>6+</option><option>12+</option><option>16+</option><option>18+</option></select></div><div><label for="rating">Reyting</label><input id="rating" type="number" min="0" max="10" step="0.1"></div></div>
+<label for="poster">Poster manzili (HTTPS yoki posters/ ichidagi fayl)</label><input id="poster">
+<label for="description">Tavsif</label><textarea id="description"></textarea>
+<label><input id="hero" type="checkbox" style="width:auto"> Bosh sahifada katta ko‘rsatish</label>
+<p id="error" class="warn" hidden></p><button class="primary" type="submit">Saqlash</button>
+</form></section>
+<section class="card"><h2>O‘zgarishlarni saytga chiqarish</h2><p class="small">Saytning statik fayli <code>data/films.js</code>. Eksport qilganingizdan keyin uni GitHub'dagi xuddi shu fayl bilan almashtiring. Yoki quyida GitHub fine-grained tokeni bilan nashr qiling.</p>
+<div class="row"><button class="primary" id="export">films.js yuklab olish</button><button id="publish">GitHub'ga chiqarish</button></div>
+<label for="token">GitHub token — faqat shu oynadagi xotirada (saqlanmaydi)</label><input id="token" type="password" autocomplete="off" placeholder="Fine-grained token, Contents: Read and write"><p class="small warn">Tokenni hech kimga yubormang. Admin panelni faqat o‘zingiz ishlating.</p>
+<p id="status">O‘zgarishlar hozircha faqat shu brauzerda. Sahifani yangilasangiz saqlanmagan o‘zgarishlar yo‘qoladi.</p></section>
+</main><script src="data/films.js"></script><script>
+(function(){'use strict';
+const $=q=>document.querySelector(q),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let films=JSON.parse(JSON.stringify(window.FILMS||[]));let site=JSON.parse(JSON.stringify(window.SITE||{name:'Ekran TV'}));let editId=null;
+const fields=['title','genre','video','year','duration','age','rating','poster','description'];
+function movieUrl(v){v=String(v||'').trim();if(!v)return '';try{const u=new URL(v),m=u.pathname.match(/^\/(?:embed|v)\/([A-Za-z0-9_-]+)\/?$/);if(u.protocol==='https:'&&['fembed.co','www.fembed.co'].includes(u.hostname.toLowerCase())&&m)return 'https://fembed.co/embed/'+m[1];}catch{}return null;}
+function show(){ $('#count').textContent=films.length;$('#movies').innerHTML=films.map(f=>'<div class="movie"><div class="grow"><strong>'+esc(f.title)+'</strong><span class="small">'+esc(f.genre||'')+' · '+esc(f.video?'Fembed':'Video yo‘q')+'</span></div><div class="buttons"><button data-edit="'+f.id+'">Tahrirlash</button> <button class="danger" data-delete="'+f.id+'">O‘chirish</button></div></div>').join('')||'<p>Kino yo‘q.</p>';}
+function form(f){editId=f?.id??null;$('#editor').hidden=false;$('#editHeading').textContent=f?'Kinoni tahrirlash':'Yangi kino';for(const field of fields)$('#'+field).value=f?.[field]??'';$('#age').value=f?.age||'12+';$('#hero').checked=!!f&&Number(site.heroFilmId)===Number(f.id);$('#error').hidden=true;$('#editor').scrollIntoView({behavior:'smooth'});}
+$('#addFilm').onclick=()=>form(null);$('#cancel').onclick=()=>{$('#editor').hidden=true;};
+$('#movies').onclick=e=>{const a=e.target.closest('[data-edit]'),b=e.target.closest('[data-delete]');if(a){form(films.find(f=>f.id===Number(a.dataset.edit)));return;}if(b){if(confirm('Kinoni o‘chirasizmi?')){films=films.filter(f=>f.id!==Number(b.dataset.delete));show();}}};
+$('#movieForm').onsubmit=e=>{e.preventDefault();const url=movieUrl($('#video').value);if(url===null){$('#error').hidden=false;$('#error').textContent='Faqat haqiqiy Fembed HTTPS havolasini kiriting.';return;}const old=films.find(f=>f.id===editId);const f=old?{...old}:{id:Math.max(100000,...films.map(x=>Number(x.id)||0))+1,colors:['#262344','#5a4390','#e7d6ff']};
+for(const field of fields)f[field]=$('#'+field).value.trim();
+f.video=url;f.year=Number(f.year)||0;f.duration=Number(f.duration)||0;f.rating=f.rating===''?null:Number(f.rating);
+if(old)Object.assign(old,f);else films.push(f);if($('#hero').checked)site.heroFilmId=f.id;
+$('#editor').hidden=true;show();$('#status').textContent='O‘zgarish tayyor. films.js faylini eksport qiling yoki GitHub’ga chiqaring.';};
+function source(){return '/* Ekran TV — faqat kinolar */\nwindow.SITE = '+JSON.stringify(site,null,2)+';\nwindow.FILMS = '+JSON.stringify(films,null,2)+';\n';}
+$('#export').onclick=()=>{const a=document.createElement('a'),blob=new Blob([source()],{type:'text/javascript;charset=utf-8'});a.href=URL.createObjectURL(blob);a.download='films.js';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000);};
+$('#publish').onclick=async()=>{
+ const token=$('#token').value.trim();if(!token){$('#status').textContent='GitHub token kiriting.';return;}
+ const path='https://api.github.com/repos/alishertv3003-max/ekran-tv/contents/data/films.js';
+ const headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+ const button=$('#publish');button.disabled=true;$('#status').textContent='GitHub bilan bog‘lanmoqda...';
+ try{const cur=await fetch(path,{headers});if(!cur.ok)throw Error('GitHub fayli olinmadi: '+cur.status);const o=await cur.json();
+ const bytes=new TextEncoder().encode(source());let str='';for(let i=0;i<bytes.length;i+=16384)str+=String.fromCharCode(...bytes.subarray(i,i+16384));
+ const response=await fetch(path,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({message:'Ekran TV: kinolar katalogi yangilandi',content:btoa(str),sha:o.sha,branch:'main'})});
+ if(!response.ok)throw Error('GitHub saqlash xatosi '+response.status+': '+(await response.text()).slice(0,200));
+ $('#status').textContent='Kinolar GitHub’ga chiqdi. Sayt keshini yangilang.';
+ }catch(err){$('#status').textContent='Xato: '+err.message;}finally{button.disabled=false;}
 };
-$('#publishUz').onclick=async()=>{
- if(!connected){setMsg($('#uzMsg'),'Avval GitHub’ga ulaning yoki uz_channels.js faylini eksport qiling.',true);return;}
- if(!confirm('O‘zbek IPTV manzillarini GitHub’ga joylash huquqingiz va ruxsatingiz bormi?'))return;
- const b=$('#publishUz');b.disabled=true;
- try{await putFile('data/uz_channels.js',b64text(uzChannelsJs()));baseUz=JSON.stringify(UZTV);setMsg($('#uzMsg'),'O‘zbek kanallari GitHub’ga chiqarildi.');}catch(e){setMsg($('#uzMsg'),e.message,true);}finally{b.disabled=false;}
-};
-$('#installInfo').textContent=SITE_FILES?`${Object.keys(SITE_FILES).length} ta sayt fayli tayyor. GitHub’ga ulanganingizdan keyin o‘rnatish mumkin.`:'Oddiy admin.html ichida o‘rnatish to‘plami yo‘q. ZIP ichidagi ekran-tv-tools/ekran-tv-panel.html ni oching.';
-$('#installBtn').disabled=!SITE_FILES;
-$('#installBtn').onclick=async()=>{
- if(!SITE_FILES)return;
- if(!connected){setMsg($('#installLog'),'Avval «GitHub ulanish» bo‘limidan ulaning.',true);return;}
- if(!confirm('Barcha sayt fayllari (shu jumladan HTTP kanal havolalari va tokenlar) repository’ga yuklanadi. Namoyish huquqi va token xavfsizligini tekshirdingizmi?'))return;
- const b=$('#installBtn');b.disabled=true;$('#installLog').hidden=false;$('#installLog').textContent='';
- const log=m=>{$('#installLog').textContent+=m+'\n';};
- try{for(const [path,file] of Object.entries(SITE_FILES)){
-  // index.html, admin.html etc from archive, media from embedded b64.
-  log('… '+path);await putFile(path,file.b64||b64text(file.text));log('✓ '+path);
- }
- log('Sayt fayllari GitHub’ga joylandi. GitHub → Settings → Pages → Deploy from branch → main / root ni tanlang.');
- }catch(err){log('Xato: '+err.message);}finally{b.disabled=false;}
-};
-renew();drawMovies();drawChannels();
+show();
 })();
-</script>
-</body>
-</html>
+</script></body></html>

@@ -22,7 +22,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/tv-player.css">
+
+
 <link rel="stylesheet" href="css/film-player.css">
 </head>
 <body>
@@ -33,8 +34,10 @@
     <nav class="main" aria-label="Asosiy menyu">
       <a href="#bosh" class="on">Bosh sahifa</a>
       <a href="#kinolar">Kinolar</a>
-      <a href="#ozbek-kanallari">O‘zbek kanallari</a>
-      <a href="#telekanallar">Telekanallar</a>
+
+
+
+
       <a href="#haqida">Biz haqimizda</a>
     </nav>
     <div class="top-right">
@@ -93,60 +96,12 @@
   </section>
 
 
-  <section class="block tight uz-section" id="ozbek-kanallari">
-    <div class="wrap">
-      <div class="block-head">
-        <div><span class="eyebrow">O‘zbekiston jonli efiri</span><h2>O‘zbek kanallari</h2></div>
-        <span class="tv-count" id="uzCount" aria-live="polite">Kanallar yuklanmoqda…</span>
-      </div>
-      <div class="tv-controls">
-        <label class="tv-search-label">O‘zbek kanalini qidirish
-          <input type="search" id="uzSearch" placeholder="Masalan, Sevimli yoki Sport…" autocomplete="off">
-        </label>
-        <label class="tv-search-label">Kategoriya
-          <select id="uzCategory"><option value="">Barcha kategoriyalar</option></select>
-        </label>
-      </div>
-      <div class="tv-grid" id="uzGrid" aria-live="polite"></div>
-      <p class="tv-empty" id="uzEmpty" hidden>Bu nom bo‘yicha o‘zbek kanali topilmadi.</p>
-      <p class="tv-note">Kanallar yangi <code>yosso.media.pl(1).m3u</code> faylidan olindi. HTTP va M3U ichidagi boshqa davlat kanallari chiqarildi. HD/SD belgisi faqat nomdan olingan; oqimlar jonli sinovdan o‘tmagan. Efir, CORS va namoyish huquqlari provayderga bog‘liq.</p>
-    </div>
-  </section>
-
-  <section class="block tight" id="telekanallar">
-    <div class="wrap">
-      <div class="block-head">
-        <div><span class="eyebrow">Jonli efir katalogi</span><h2>Telekanallar</h2></div>
-        <span class="tv-count" id="tvCount" aria-live="polite">Kanallar yuklanmoqda…</span>
-      </div>
-      <div class="tv-controls">
-        <label class="tv-search-label">Kanal qidirish
-          <input type="search" id="tvSearch" placeholder="Kanal nomini yozing…" autocomplete="off">
-        </label>
-        <label class="tv-search-label">Kategoriya
-          <select id="tvCategory"><option value="">Barcha kategoriyalar</option></select>
-        </label>
-      </div>
-      <div class="tv-note" style="margin:12px 0 18px;padding:15px;border:1px solid #6e617b;border-radius:12px">
- <strong>Shaxsiy IPTV sinovi (faqat shu qurilmada)</strong>
- <p>Ruxsatingiz bor M3U faylni tanlasangiz, kanallarning oqimlari faqat shu qurilmadagi ochiq sahifaga ulanadi. Fayl GitHub’ga yuborilmaydi yoki saqlanmaydi. Boshqa tomoshabinlarda ko‘rinmaydi.</p>
- <label for="iptvLocalFile">M3U faylni tanlash</label>
- <input id="iptvLocalFile" type="file" accept=".m3u,.m3u8,text/plain,audio/x-mpegurl,application/vnd.apple.mpegurl" style="display:block;margin:8px 0">
- <p id="iptvLocalStatus" role="status">Muhim: HTTP manzillar HTTPS saytda bloklanadi. Ommaviy translatsiya uchun provayder ruxsati va HTTPS manba zarur.</p>
- </div>
- <div class="tv-grid" id="tvGrid" aria-live="polite"></div>
-      <p class="tv-empty" id="tvEmpty" hidden>Bu nom bo'yicha kanal topilmadi.</p>
-      <div class="tv-more-wrap"><button class="btn btn-ghost" id="tvMore" type="button" hidden>Yana kanallarni ko'rsatish</button></div>
-      <p class="tv-note">Kanal ro'yxatda bo'lishi efir ishlashini kafolatlamaydi. Xalqaro kanallar manbasidagi HTTP oqimlar HTTPS saytda bloklanishi mumkin. Faqat namoyish huquqi mavjud efirlardan foydalaning.</p>
-    </div>
-  </section>
-
   <section class="block tight" id="haqida">
     <div class="wrap">
       <div class="block-head"><div><span class="eyebrow">Biz haqimizda</span><h2>Nega Ekran TV</h2></div></div>
       <div class="about">
         <div class="cell"><h3>O'zimizning kinolar</h3><p>Platformada faqat namoyish qilishga tegishli ruxsati mavjud kontentni joylashtirish ko‘zda tutiladi.</p></div>
-        <div class="cell"><h3>Kinolar va telekanallar</h3><p>Kinolarni Fembed orqali, telekanallarni esa alohida katalogdan toping.</p></div>
+        <div class="cell"><h3>Kinolar katalogi</h3><p>Kinolarni janrlar bo‘yicha toping va video player orqali tomosha qiling.</p></div>
         <div class="cell"><h3>Istalgan qurilmada</h3><p>Telefon, planshet, kompyuter va Smart TV brauzerida ishlaydi. Telefoningizga ilova sifatida o'rnating.</p></div>
       </div>
     </div>
@@ -163,8 +118,10 @@
 <nav class="tabbar" aria-label="Pastki menyu">
   <a href="#bosh" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Bosh</a>
   <a href="#kinolar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4"/></svg>Kinolar</a>
-  <a href="#ozbek-kanallari"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 22h8M12 19v3"/></svg>O‘zbek TV</a>
-  <a href="#telekanallar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 22h8M12 19v3"/></svg>Telekanallar</a>
+
+
+
+
   <a href="#haqida"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Biz haqimizda</a>
 </nav>
 
@@ -197,11 +154,15 @@
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="data/films.js"></script>
-<script src="data/channels.js"></script>
-<script src="data/uz_channels.js"></script>
-<script src="js/iptv-local.js"></script>
+
+
+
+
+
+
 <script src="js/film-player.js"></script>
 <script src="js/app.js"></script>
-<script src="js/tv-player.js"></script>
+
+
 </body>
 </html>
