@@ -12,3 +12,6 @@ Site bundling uses latest `origin/main` at build time. The new TV player has D-p
 
 ## Xorijiy kanallarni sinash
 Ekran TV asosiy sayti barcha 1 461 ta kanal nomini saqlaydi. Ruxsatli M3U faylni import qilish uchun Telekanallar bo'limidan M3U yuklang; import faqat qurilmada vaqtincha ishlaydi va tokenlar GitHub'ga yuborilmaydi. Rasmiy HTTPS oqimlar tavsiya etiladi.
+
+## Minimalist player update
+The APK now bundles the latest public main branch: automatic fullscreen on channel selection (when the device allows), icon-only controls, and controls hidden after 2 seconds. Buffering indicator remains visible while buffering. No 15-second target label.
