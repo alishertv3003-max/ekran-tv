@@ -20,23 +20,28 @@ function parse(text){
  return result;
 }
 function importM3u(text){
- const list=parse(text),catalog=window.TV_CHANNELS||[];
+ const list=parse(text);
+ const catalog=[...(window.UZ_CHANNELS||[]),...(window.TV_CHANNELS||[])];
  const byId=new Map(),byName=new Map();
  for(const item of list){
-  if(item.id){const key=norm(item.id);if(!byId.has(key))byId.set(key,[]);byId.get(key).push(item);}
-  const key=norm(item.name);if(key){if(!byName.has(key))byName.set(key,[]);byName.get(key).push(item);}
+  if(item.id){const k=norm(item.id);if(!byId.has(k))byId.set(k,[]);byId.get(k).push(item);}
+  const k=norm(item.name);if(k){if(!byName.has(k))byName.set(k,[]);byName.get(k).push(item);}
  }
- let assigned=0,secure=0,unencrypted=0;
+ let assigned=0,secure=0,unencrypted=0,uz=0,foreign=0;
  const taken=new Set();
  for(const ch of catalog){
-  let matches=(ch.tvgId?byId.get(norm(ch.tvgId)):null)||byName.get(norm(ch.name))||[];
-  if(!matches.length)matches=byName.get(norm(ch.name))||[];
-  const stream=matches.find(x=>!taken.has(x)&&/^https:\/\//i.test(x.url))||matches.find(x=>!taken.has(x));
+  const matches=(ch.tvgId?byId.get(norm(ch.tvgId)):null)||byName.get(norm(ch.name))||[];
+  const stream=matches.find(x=>!taken.has(x)&&x.name===ch.name&&/^https:\/\//i.test(x.url))
+    ||matches.find(x=>!taken.has(x)&&x.name===ch.name)
+    ||matches.find(x=>!taken.has(x)&&/^https:\/\//i.test(x.url))
+    ||matches.find(x=>!taken.has(x));
   if(!stream)continue;
-  taken.add(stream);ch.url=stream.url;assigned++;if(stream.url.startsWith('https://'))secure++;else unencrypted++;
+  taken.add(stream);ch.url=stream.url;assigned++;
+  if(/^https:\/\//i.test(stream.url))secure++;else unencrypted++;
+  if(ch.group==='Uzbekistan (UZ)')uz++;else foreign++;
  }
- window.dispatchEvent(new CustomEvent('ekran-iptv-import',{detail:{total:list.length,assigned,secure,unencrypted}}));
- return {total:list.length,assigned,secure,unencrypted};
+ window.dispatchEvent(new CustomEvent('ekran-iptv-import',{detail:{total:list.length,assigned,secure,unencrypted,uz,foreign}}));
+ return {total:list.length,assigned,secure,unencrypted,uz,foreign};
 }
 function init(){
  const input=document.getElementById('iptvLocalFile');
@@ -47,7 +52,7 @@ function init(){
   if(file.size>10*1024*1024){status.textContent='M3U fayl 10 MB dan kichik bo‘lishi kerak.';return;}
   try{
    const outcome=importM3u(await file.text());
-   status.textContent=outcome.total+' ta M3U yozuvi o‘qildi, '+outcome.assigned+' ta katalog kanaliga oqim ulandi. HTTPS: '+outcome.secure+'; HTTP: '+outcome.unencrypted+'. HTTP saytimizda bloklanadi. Sahifani yangilasangiz ulanish yo‘qoladi.';
+   status.textContent=outcome.total+' ta M3U yozuvi o‘qildi, '+outcome.assigned+' ta katalog kanaliga oqim ulandi (O‘zbek: '+outcome.uz+', xorijiy: '+outcome.foreign+'). HTTPS: '+outcome.secure+'; HTTP: '+outcome.unencrypted+'. HTTP saytimizda bloklanadi. Sahifani yangilasangiz ulanish yo‘qoladi.';
   }catch(e){status.textContent='Import xatosi: '+e.message;}
   input.value='';
  });
