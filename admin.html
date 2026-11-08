@@ -14,13 +14,14 @@ a{color:var(--gold)}header{position:sticky;top:0;background:#151223ec;border-bot
 <body>
 <header><div class="wrap head"><div class="logo"><span class="gold">▶</span> Ekran TV <span class="sub">· Admin panel</span></div><div class="sub" id="connectionBadge">Mahalliy rejim</div></div></header>
 <main class="wrap">
-<h1>Platforma boshqaruvi</h1><p class="muted">Filmlar uchun faqat Fembed havolasi. Telekanallar uchun M3U katalogi.</p>
+<h1>Platforma boshqaruvi</h1><p class="muted">Filmlar uchun Fembed yoki ixtiyoriy bevosita HTTPS video; telekanallar uchun M3U katalogi.</p>
 <nav class="tabs" role="tablist"><button type="button" data-tab="films" aria-selected="true">Kinolar</button><button type="button" data-tab="channels" aria-selected="false">Telekanallar</button><button type="button" data-tab="uzchannels" aria-selected="false">O‘zbek kanallari</button><button type="button" data-tab="settings" aria-selected="false">GitHub ulanish</button><button type="button" data-tab="install" aria-selected="false">Saytni o‘rnatish</button></nav>
 <section data-panel="films">
 <div class="card"><div class="row between"><div><h2>Kinolar</h2><p class="sub" id="filmCount"></p></div><button class="btn primary" id="newFilm" type="button">＋ Kino qo‘shish</button></div><div id="filmList"></div></div>
 <form id="filmForm" class="card stack" hidden>
 <div class="row between"><h2 id="filmHeading">Yangi kino</h2><button type="button" class="btn" id="cancelFilm">Bekor qilish</button></div>
 <label class="field">Fembed havolasi (boshqa havola qabul qilinmaydi)<input id="filmVideo" type="url" placeholder="https://fembed.co/embed/P3z_kD-G5puOo" autocomplete="off"><span class="hint">Faqat <code>https://fembed.co/embed/VIDEO_ID</code>. Havola bo‘sh bo‘lsa, kino «Tez orada» bo‘lib turadi.</span></label>
+<label class="field">To‘g‘ridan-to‘g‘ri HTTPS video (ixtiyoriy)<input id="filmDirect" type="url" placeholder="https://video-host.example/film.mp4" autocomplete="off"><span class="hint">Faqat o‘zingiz namoyish qilishga haqli bo‘lgan HTTPS .mp4, .webm, .m4v yoki .m3u8 video. Shu manbada pult orqali ±5 soniya va pauza ishlaydi. Fembed iframe ichini saytdan boshqarib bo‘lmaydi.</span></label>
 <div class="cols"><label class="field">Kino nomi *<input id="filmTitle" type="text" required></label><label class="field">Janr *<input id="filmGenre" type="text" required></label></div>
 <div class="cols three"><label class="field">Yili<input id="filmYear" type="number" min="1900" max="2100"></label><label class="field">Davomiyligi (daq.)<input id="filmDur" type="number" min="0" max="999"></label><label class="field">Reyting (0–10)<input id="filmRating" type="number" min="0" max="10" step="0.1"></label></div>
 <div class="cols"><label class="field">Yosh chegarasi<select id="filmAge"><option>0+</option><option>6+</option><option selected>12+</option><option>16+</option><option>18+</option></select></label><label class="field">Poster URL (ixtiyoriy)<input id="posterUrl" type="text" placeholder="posters/rasm.jpg yoki https://..."></label></div>
@@ -87,8 +88,12 @@ function movieVideo(v){
  try{const u=new URL(v),m=u.pathname.match(/^\/(?:embed|v)\/([A-Za-z0-9_-]+)\/?$/);if(u.protocol==='https:'&&['fembed.co','www.fembed.co'].includes(u.hostname.toLowerCase())&&m)return 'https://fembed.co/embed/'+m[1];}catch{}
  return null;
 }
+function directMovieVideo(v){
+ if(!v)return '';
+ try {const u=new URL(v);return u.protocol==='https:' && /\.(?:mp4|m4v|webm|m3u8)$/i.test(u.pathname)?u.href:null;}catch{return null;}
+}
 function jsonText(v){return JSON.stringify(v,null,2);}
-function filmsJs(){return `/* Ekran TV kinolari — faqat Fembed video havolasi (video) */\nwindow.SITE = ${jsonText(SITE)};\nwindow.FILMS = ${jsonText(FILMS.map(f=>{const x={...f};delete x.youtube;return x;}))};\n`;}
+function filmsJs(){return `/* Ekran TV kinolari — Fembed (video) va ixtiyoriy bevosita HTTPS video (directVideo) */\nwindow.SITE = ${jsonText(SITE)};\nwindow.FILMS = ${jsonText(FILMS.map(f=>{const x={...f};delete x.youtube;return x;}))};\n`;}
 function channelsJs(){return `/* Ekran TV M3U katalogi — HTTP va tokenli URLlarni ommaga chiqarishdan oldin huquqni tekshiring. */\nwindow.TV_CHANNELS = ${JSON.stringify(TV)};\n`;}
 function uzChannelsJs(){return `/* Ekran TV — O‘zbek kanallari, data/uz_channels.js */\nwindow.UZ_CHANNELS = ${JSON.stringify(UZTV)};\n`;}
 function bytesB64(bytes){let s='';for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(s);}
@@ -113,7 +118,7 @@ return `<article class="movie">${safe?`<img class="poster" src="${esc(safe)}" lo
 function drawChannels(){const http=TV.filter(x=>String(x.url||'').startsWith('http://')).length;$('#channelTotal').textContent=TV.length;$('#channelGroups').textContent=new Set(TV.map(c=>c.group)).size;$('#httpTotal').textContent=http;$('#uzTotal').textContent=UZTV.length;$('#uzGroups').textContent=new Set(UZTV.map(c=>c.group)).size;$('#uzHttpTotal').textContent=UZTV.filter(x=>String(x.url||'').startsWith('http://')).length;}
 function movieForm(id){editId=id;posterFile=null;$('#posterFile').value='';$('#filmError').hidden=true;
  const f=id==null?null:FILMS.find(x=>Number(x.id)===id);$('#filmHeading').textContent=f?'Kinoni tahrirlash':'Yangi kino';
- for(const [key,val] of Object.entries({filmTitle:f?.title||'',filmVideo:f?.video||'',filmGenre:f?.genre||'',filmYear:f?((Number(f.year)>0)?f.year:''):new Date().getFullYear(),filmDur:f?.duration??90,filmAge:f?.age||'12+',filmRating:f?.rating??8,filmDesc:f?.description||'',posterUrl:f?.poster||''}))$('#'+key).value=val;
+ for(const [key,val] of Object.entries({filmTitle:f?.title||'',filmVideo:f?.video||'',filmDirect:f?.directVideo||'',filmGenre:f?.genre||'',filmYear:f?((Number(f.year)>0)?f.year:''):new Date().getFullYear(),filmDur:f?.duration??90,filmAge:f?.age||'12+',filmRating:f?.rating??8,filmDesc:f?.description||'',posterUrl:f?.poster||''}))$('#'+key).value=val;
  $('#filmHero').checked=f?SITE.heroFilmId===f.id:false;
  $('#posterPreview').hidden=!f?.poster;if(f?.poster)$('#posterPreview').src=f.poster;
  $('#filmForm').hidden=false;$('#filmForm').scrollIntoView({behavior:'smooth',block:'start'});$('#filmVideo').focus();}
@@ -121,11 +126,11 @@ $('#newFilm').onclick=()=>movieForm(null);
 $('#cancelFilm').onclick=()=>$('#filmForm').hidden=true;
 $('#filmList').onclick=e=>{const ed=e.target.closest('[data-edit]'),dl=e.target.closest('[data-del]');if(ed)movieForm(Number(ed.dataset.edit));if(dl){const id=Number(dl.dataset.del),f=FILMS.find(x=>x.id===id);if(!f||!confirm(`“${f.title}” filmini o‘chirasizmi?`))return;FILMS=FILMS.filter(x=>x.id!==id);if(SITE.heroFilmId===id)SITE.heroFilmId=FILMS[0]?.id||null;drawMovies();}};
 $('#posterFile').onchange=e=>{posterFile=e.target.files?.[0]||null;if(!posterFile)return;const u=URL.createObjectURL(posterFile);$('#posterPreview').src=u;$('#posterPreview').hidden=false;};
-$('#filmForm').onsubmit=async e=>{e.preventDefault();const name=$('#filmTitle').value.trim(),genre=$('#filmGenre').value.trim(),link=movieVideo($('#filmVideo').value.trim());
- if(!name||!genre||link===null){setMsg($('#filmError'),!name?'Kino nomini yozing.':!genre?'Janrni kiriting.':'Faqat Fembed havolasini kiriting: https://fembed.co/embed/VIDEO_ID',true);return;}
+$('#filmForm').onsubmit=async e=>{e.preventDefault();const name=$('#filmTitle').value.trim(),genre=$('#filmGenre').value.trim(),link=movieVideo($('#filmVideo').value.trim()),direct=directMovieVideo($('#filmDirect').value.trim());
+ if(!name||!genre||link===null||direct===null){setMsg($('#filmError'),!name?'Kino nomini yozing.':!genre?'Janrni kiriting.':link===null?'Fembed havolasi noto‘g‘ri.':'To‘g‘ridan-to‘g‘ri HTTPS video .mp4, .webm, .m4v yoki .m3u8 bo‘lishi kerak.',true);return;}
  let f=editId==null?null:FILMS.find(x=>Number(x.id)===editId);
  if(!f){const id=Math.max(0,...FILMS.map(x=>Number(x.id)||0))+1;f={id,colors:['#253047','#7c5ca8','#e6cfff']};FILMS.push(f);}
- Object.assign(f,{title:name,genre,video:link||'',year:Number($('#filmYear').value)||0,duration:Math.max(0,Number($('#filmDur').value)||0),rating:Number($('#filmRating').value)||0,age:$('#filmAge').value,description:$('#filmDesc').value.trim(),poster:$('#posterUrl').value.trim()});delete f.youtube;
+ Object.assign(f,{title:name,genre,video:link||'',directVideo:direct||'',year:Number($('#filmYear').value)||0,duration:Math.max(0,Number($('#filmDur').value)||0),rating:Number($('#filmRating').value)||0,age:$('#filmAge').value,description:$('#filmDesc').value.trim(),poster:$('#posterUrl').value.trim()});delete f.youtube;
  if(posterFile){const ext=posterFile.type==='image/png'?'png':posterFile.type==='image/webp'?'webp':'jpg';const path=`posters/${slug(name)}-${f.id}.${ext}`;pendingPosters[path]=posterFile;f.poster=path;}
  if($('#filmHero').checked)SITE.heroFilmId=f.id;else if(SITE.heroFilmId===f.id)SITE.heroFilmId=FILMS[0]?.id??null;
  $('#filmForm').hidden=true;drawMovies();};
