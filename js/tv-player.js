@@ -40,6 +40,7 @@ function make(){
    else next=visible[(n+(direction==='ArrowRight'?1:-1)+visible.length)%visible.length];
    if(next){next.focus();stage.classList.remove('tv-idle');}
  }
+ stage._moveFocus=moveFocus;
  stage.onmousemove=showUi;stage.onclick=showUi;
 }
 var idle;
@@ -133,7 +134,7 @@ document.addEventListener('keydown',e=>{
  showUi();
  if(['Escape','Backspace','BrowserBack'].includes(e.key)){e.preventDefault();e.stopImmediatePropagation();close();return;}
  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){
-   e.preventDefault();e.stopImmediatePropagation();moveFocus(e.key);return;
+   e.preventDefault();e.stopImmediatePropagation();stage._moveFocus(e.key);return;
  }
  if(e.key==='f'||e.key==='F'||e.key==='MediaPlayPause'){
    e.preventDefault();e.stopImmediatePropagation();if(e.key==='MediaPlayPause')$('#tvPause').click();else $('#tvMax').click();return;
