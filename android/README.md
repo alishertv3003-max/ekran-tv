@@ -18,3 +18,6 @@ The APK now bundles the latest public main branch: automatic fullscreen on chann
 
 ## Fullscreen film player update
 The latest main branch is bundled into the APK at build time. Native HTTPS MP4/HLS films support TV-remote ±5-second seeking, pause/play and Stop; cross-origin Fembed embeds cannot expose playback controls to the wrapper without provider API support. International-channel catalog remains 1,461 items with safe metadata only (HTTP token-bearing URLs withheld from public repository).
+
+## IPTV catalog update (8 Nov 2026)
+The app bundles current main site's new 20 Uzbekistan + 1461 foreign catalog entries. Previous UZ and Cinerama streams are removed. The user can import the supplied permitted M3U playlist into both catalogs locally. Source HTTP URLs are not included in public repo or APK; secure playback requires licensed HTTPS HLS or a properly secured provider integration.
