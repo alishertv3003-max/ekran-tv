@@ -1,148 +1,204 @@
-/* Ekran TV Live Player — TV pult, full screen, 15-second HLS latency target. */
-(function(){
+/* Ekran TV — cinematic live-TV player for Android TV, TV browsers and phones. */
+(function () {
 'use strict';
-var stage=null,video=null,hls=null,active=null,index=0,isUz=false,focusBefore=null,delayPoll=null,timeout=null;
-var $=s=>stage?.querySelector(s);
+const AUTO_HIDE_MS=2000;
+let stage=null,video=null,hls=null,current=null,index=0,isUz=false,prevFocus=null;
+let uiTimer=null,delayTimer=null,loadTimer=null,requestSerial=0;
+const $=s=>stage?.querySelector(s);
+const icons={
+ back:'<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
+ prev:'<svg viewBox="0 0 24 24"><path d="m7 6-5 6 5 6V6Zm2 6 11-6v12L9 12Z"/></svg>',
+ next:'<svg viewBox="0 0 24 24"><path d="m17 6 5 6-5 6V6ZM15 12 4 6v12l11-6Z"/></svg>',
+ pause:'<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+ play:'<svg viewBox="0 0 24 24"><path d="m7 4 14 8-14 8V4Z"/></svg>',
+ sound:'<svg viewBox="0 0 24 24"><path d="M3 9v6h4l6 5V4L7 9H3Zm13-2a7 7 0 0 1 0 10m3-13a11 11 0 0 1 0 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+ muted:'<svg viewBox="0 0 24 24"><path d="M3 9v6h4l6 5V4L7 9H3Zm13 0 5 6m0-6-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+};
+function button(id,icon,label){return '<button type="button" class="tv-icon-btn" id="'+id+'" aria-label="'+label+'" title="'+label+'">'+icons[icon]+'</button>';}
 function make(){
  if(stage)return;
- stage=document.createElement('section');stage.id='tvStage';stage.className='tv-stage';stage.hidden=true;stage.setAttribute('role','dialog');stage.setAttribute('aria-label','Jonli telekanal');
- stage.innerHTML='<div class="tv-video" id="tvVideo"></div><div class="tv-shade"></div>'+
- '<header class="tv-top"><button class="tv-btn" id="tvExit">← Kanallar</button><div class="tv-title"><strong id="tvName"></strong><small id="tvGroup"></small></div><span class="tv-live">● JONLI EFIR</span></header>'+
- '<div class="tv-status" id="tvStatus"><span class="tv-spin"></span><strong id="tvStatusTitle">Efir yuklanmoqda…</strong><small id="tvStatusText"></small><button class="tv-btn" id="tvRetry" hidden>↻ Qayta urinish</button></div>'+
- '<footer class="tv-bottom"><div class="tv-head"><strong id="tvNameBottom"></strong><span id="tvDelay">⏱ 15 soniya maqsad</span></div>'+
- '<div class="tv-buttons"><button class="tv-btn" id="tvPrev">⏮ Oldingi</button><button class="tv-btn" id="tvPause">⏸ Pauza</button><button class="tv-btn" id="tvMute">🔊 Ovoz</button><button class="tv-btn" id="tvNext">Keyingi ⏭</button><button class="tv-btn tv-max" id="tvMax">⛶ Katta ekran</button></div>'+
- '<small class="tv-help">TV pulti: yo‘nalishlar — tugmalarni tanlash, OK — bosish, Back — chiqish. 15 soniya manbaga bog‘liq.</small></footer>';
- document.body.appendChild(stage);
+ stage=document.createElement('section');
+ stage.id='tvStage';stage.className='tv-stage';stage.hidden=true;stage.tabIndex=-1;
+ stage.setAttribute('role','dialog');stage.setAttribute('aria-label','Ekran TV jonli kanal');
+ stage.innerHTML='<div class="tv-video" id="tvVideo"></div>'+
+ '<div class="tv-shade" aria-hidden="true"></div>'+
+ '<div class="tv-top">'+button('tvExit','back','Kanallar ro‘yxatiga qaytish')+
+ '<div class="tv-title"><strong id="tvName"></strong><small id="tvGroup"></small></div>'+
+ '<span class="tv-live">● JONLI EFIR</span></div>'+
+ '<div class="tv-status" id="tvStatus"><span class="tv-spin"></span><strong id="tvStatusTitle">Efir yuklanmoqda…</strong><small id="tvStatusText">Ulanmoqda</small>'+
+ '<button class="tv-retry" id="tvRetry" type="button" hidden>↻ Qayta urinish</button></div>'+
+ '<div class="tv-bottom"><div class="tv-name" id="tvNameBottom"></div><div class="tv-buttons">'+
+ button('tvPrev','prev','Oldingi kanal')+button('tvPause','pause','Pauza')+
+ button('tvMute','sound','Ovozni o‘chirish')+button('tvNext','next','Keyingi kanal')+
+ '</div></div>';
+ document.body.append(stage);
  $('#tvExit').onclick=close;
- $('#tvRetry').onclick=()=>{if(active)open(active,index,isUz);};
  $('#tvPrev').onclick=()=>switchChannel(-1);
  $('#tvNext').onclick=()=>switchChannel(1);
- $('#tvPause').onclick=()=>{if(!video)return;video.paused?video.play().catch(()=>{}):video.pause();sync();};
- $('#tvMute').onclick=()=>{if(!video)return;video.muted=!video.muted;sync();};
- $('#tvMax').onclick=()=>toggleFullscreen();
- function notice(msg){var el=$('#tvFullscreenNotice');if(!el){el=document.createElement('div');el.id='tvFullscreenNotice';el.className='tv-fullscreen-notice';stage.appendChild(el);}el.textContent=msg;el.hidden=false;clearTimeout(el._t);el._t=setTimeout(()=>el.hidden=true,4500);}
- function toggleFullscreen(){
-   if(document.fullscreenElement){document.exitFullscreen?.().catch?.(()=>{});return;}
-   if(stage.requestFullscreen){
-     try{Promise.resolve(stage.requestFullscreen()).catch(()=>{if(video?.webkitEnterFullscreen){video.webkitEnterFullscreen();}else notice('Bu TV brauzerida fullscreen cheklangan. Android TV ilovasida sinab ko‘ring.');});}
-     catch(e){notice('Brauzer fullscreen rejimini qo‘llamaydi. Android TV ilovasidan foydalaning.');}
-   }else if(video?.webkitEnterFullscreen){try{video.webkitEnterFullscreen();}catch(e){notice('TV brauzerida fullscreen mavjud emas.');}}
-   else notice('Bu TV brauzerida fullscreen ishlamaydi. Android TV ilovasidan foydalaning.');
- }
- function moveFocus(direction){
-   var visible=['#tvExit','#tvRetry','#tvPrev','#tvPause','#tvMute','#tvNext','#tvMax'].map(x=>$(x)).filter(x=>x&&!x.hidden&&x.getClientRects().length);
-   if(!visible.length)return;
-   var activeEl=document.activeElement, n=visible.indexOf(activeEl);
-   if(n<0){$('#tvMax').focus();return;}
-   var next;
-   if(direction==='ArrowDown')next=activeEl===$('#tvExit')?$('#tvMax'):visible[Math.min(visible.length-1,n+1)];
-   else if(direction==='ArrowUp')next=activeEl.closest('.tv-bottom')?$('#tvExit'):visible[Math.max(0,n-1)];
-   else next=visible[(n+(direction==='ArrowRight'?1:-1)+visible.length)%visible.length];
-   if(next){next.focus();stage.classList.remove('tv-idle');}
- }
- stage._moveFocus=moveFocus;
- stage.onmousemove=showUi;stage.onclick=showUi;
+ $('#tvPause').onclick=()=>{if(!video)return;video.paused?video.play().catch(()=>{}):video.pause();updateButtons();showUi();};
+ $('#tvMute').onclick=()=>{if(!video)return;video.muted=!video.muted;updateButtons();showUi();};
+ $('#tvRetry').onclick=()=>{if(current)open(current,index,isUz);};
+ stage.addEventListener('mousemove',()=>showUi());
+ stage.addEventListener('pointerdown',()=>showUi());
 }
-var idle;
-function showUi(){
+function controls(){return ['#tvExit','#tvPrev','#tvPause','#tvMute','#tvNext'].map($).filter(Boolean);}
+function hideUi(){
  if(!stage||stage.hidden)return;
- stage.classList.remove('tv-idle');clearTimeout(idle);
- idle=setTimeout(()=>{if(stage&&!stage.hidden&&!stage.contains(document.activeElement)&&$('#tvStatus').hidden)stage.classList.add('tv-idle');},7000);
+ stage.classList.add('tv-idle');
+ if(stage.contains(document.activeElement))document.activeElement.blur();
+ stage.focus({preventScroll:true});
 }
-function status(title,info='',retry=false){
- $('#tvStatus').hidden=false;$('#tvStatusTitle').textContent=title;$('#tvStatusText').textContent=info;
- $('#tvRetry').hidden=!retry;stage.classList.toggle('tv-failed',retry);showUi();
+function showUi(focus=false){
+ if(!stage||stage.hidden)return;
+ stage.classList.remove('tv-idle');
+ clearTimeout(uiTimer);
+ if(focus)$('#tvPause').focus({preventScroll:true});
+ uiTimer=setTimeout(hideUi,AUTO_HIDE_MS);
 }
-function sync(){
+function status(title,detail='',retry=false){
+ if(!stage)return;
+ $('#tvStatus').hidden=false;
+ $('#tvStatusTitle').textContent=title;
+ $('#tvStatusText').textContent=detail;
+ $('#tvRetry').hidden=!retry;
+ stage.classList.toggle('tv-failed',retry);
+}
+function updateButtons(){
  if(!video||!stage)return;
- $('#tvPause').textContent=video.paused?'▶ Davom ettirish':'⏸ Pauza';
- $('#tvMute').textContent=video.muted?'🔇 Ovoz yoqish':'🔊 Ovoz';
+ $('#tvPause').innerHTML=video.paused?icons.play:icons.pause;
+ $('#tvPause').setAttribute('aria-label',video.paused?'Davom ettirish':'Pauza');
+ $('#tvMute').innerHTML=video.muted?icons.muted:icons.sound;
+ $('#tvMute').setAttribute('aria-label',video.muted?'Ovozni yoqish':'Ovozni o‘chirish');
 }
-function cleanup(){
- clearTimeout(timeout);clearTimeout(idle);clearInterval(delayPoll);timeout=idle=delayPoll=null;
- if(hls){try{hls.destroy()}catch{}hls=null;}
- if(video){try{video.pause();video.removeAttribute('src');video.load();video.remove();}catch{}video=null;}
+function clean(){
+ requestSerial++;
+ clearTimeout(uiTimer);clearTimeout(loadTimer);clearInterval(delayTimer);
+ uiTimer=loadTimer=delayTimer=null;
+ if(hls){try{hls.destroy();}catch(e){}hls=null;}
+ if(video){try{video.pause();video.removeAttribute('src');video.load();video.remove();}catch(e){}video=null;}
 }
 function close(){
  if(!stage||stage.hidden)return;
- cleanup();stage.hidden=true;stage.classList.remove('tv-idle');document.body.classList.remove('tv-active');
+ clean();
+ stage.hidden=true;
+ stage.classList.remove('tv-idle');document.body.classList.remove('tv-active');
  if(document.fullscreenElement===stage)document.exitFullscreen?.().catch?.(()=>{});
- active=null;
+ current=null;
  if(/^#(?:kanal|uzkanal)-\d+$/.test(location.hash))history.replaceState(null,'',location.pathname+location.search);
- focusBefore?.focus?.();
+ prevFocus?.focus?.({preventScroll:true});
 }
-function switchChannel(d){
- var list=isUz?(window.UZ_CHANNELS||[]):(window.TV_CHANNELS||[]);
- if(!list.length)return;
- var n=(index+d+list.length)%list.length;open(list[n],n,isUz);
+function switchChannel(dir){
+ let arr=isUz?(window.UZ_CHANNELS||[]):(window.TV_CHANNELS||[]);
+ if(!arr.length)return;
+ let n=(index+dir+arr.length)%arr.length;
+ open(arr[n],n,isUz);
 }
-function nativeDelay(){
- if(!video||!active)return;
- try{var r=video.seekable;if(!r.length)return;var end=r.end(r.length-1),start=r.start(r.length-1);
- if(end-start<17)return;var goal=Math.max(start,end-15);
- if(Math.abs(video.currentTime-goal)>5)video.currentTime=goal;
- $('#tvDelay').textContent='⏱ ~15 s (DVR)';
- }catch{}
+function requestFullScreen(){
+ // Call directly from the channel-click handler, while user activation is available.
+ // Browsers that deny the Fullscreen API still get CSS viewport-wide theater mode.
+ if(document.fullscreenElement===stage||!stage?.requestFullscreen)return;
+ try{const promise=stage.requestFullscreen({navigationUI:'hide'});promise?.catch?.(()=>{});}catch(e){}
 }
-function open(c,n,uz){
- if(!c)return;make();
- if(stage.hidden)focusBefore=document.activeElement;
- cleanup();index=n||0;isUz=!!uz;active=c;
- stage.hidden=false;stage.classList.remove('tv-idle');document.body.classList.add('tv-active');
- $('#tvName').textContent=$('#tvNameBottom').textContent=c.name||'Telekanal';
- $('#tvGroup').textContent=c.group||'';
- $('#tvDelay').textContent='⏱ 15 soniya maqsad';
+function seek15(){
+ if(!video||!current)return;
+ try{
+  const ranges=video.seekable;
+  if(!ranges.length)return;
+  const end=ranges.end(ranges.length-1),start=ranges.start(ranges.length-1);
+  if(end-start<17)return;
+  const goal=Math.max(start,end-15);
+  if(Math.abs(video.currentTime-goal)>5)video.currentTime=goal;
+ }catch(e){}
+}
+function open(channel,n,uz){
+ if(!channel)return;
+ make();
+ if(stage.hidden)prevFocus=document.activeElement;
+ clean();current=channel;index=n||0;isUz=!!uz;
+ stage.hidden=false;stage.classList.remove('tv-failed');
+ document.body.classList.add('tv-active');
+ $('#tvName').textContent=$('#tvNameBottom').textContent=channel.name||'Telekanal';
+ $('#tvGroup').textContent=channel.group||'';
  $('#tvVideo').replaceChildren();
- $('#tvMax').focus();
- var hash='#'+(isUz?'uzkanal':'kanal')+'-'+index;
+ stage.focus({preventScroll:true});
+ // No separate fullscreen button: request it at the moment a channel is selected.
+ requestFullScreen();
+ showUi();
+ const hash='#'+(isUz?'uzkanal':'kanal')+'-'+index;
  if(location.hash!==hash)history.replaceState(null,'',hash);
- status('Efir yuklanmoqda…','Manbaga ulanmoqda');
- var src=String(c.url||'').trim();
- if(!/^https:\/\//i.test(src)){status('Efir manzili ulanmagan','Provayderning ruxsatli HTTPS oqimi kerak.',true);return;}
- video=document.createElement('video');video.className='tv-media';video.playsInline=true;video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');
- video.autoplay=true;video.controls=false;video.preload='auto';video.disablePictureInPicture=true;
- $('#tvVideo').appendChild(video);var v=video;
- var fail=()=>{if(v===video)status('Efir ochilmadi','Server, CORS, havola yoki hududiy cheklovni tekshiring.',true);};
- v.addEventListener('error',fail);
- v.addEventListener('playing',()=>{if(v===video){$('#tvStatus').hidden=true;stage.classList.remove('tv-failed');sync();showUi();}});
- v.addEventListener('waiting',()=>{if(v===video)status('Buferlanmoqda…','Internet va server tekshirilmoqda');});
- v.addEventListener('pause',sync);v.addEventListener('play',sync);
- var play=()=>{if(v!==video)return;v.play().catch(()=>{status('OK tugmasini bosing','Avtomatik ijro bloklangan');$('#tvPause').focus();});};
- if(v.canPlayType('application/vnd.apple.mpegurl')){
-   v.src=src;v.addEventListener('loadedmetadata',()=>{nativeDelay();play();});delayPoll=setInterval(nativeDelay,5000);play();
- }else{
-   loadHls().then(Hls=>{if(v!==video)return;if(!Hls.isSupported()){fail();return;}
-      hls=new Hls({lowLatencyMode:false,liveSyncDuration:15,liveMaxLatencyDuration:45,maxBufferLength:35,backBufferLength:35});
-      hls.on(Hls.Events.ERROR,(_,d)=>{if(d.fatal)fail();});
-      hls.on(Hls.Events.MANIFEST_PARSED,play);
-      hls.on(Hls.Events.LEVEL_UPDATED,()=>{if(v===video)$('#tvDelay').textContent='⏱ ~15 s (HLS)';});
-      hls.attachMedia(v);hls.loadSource(src);
-   }).catch(fail);
+ status('Efir yuklanmoqda…','Kanalga ulanmoqda');
+ const src=String(channel.url||'').trim();
+ if(!/^https:\/\//i.test(src)){
+  status('Efir manzili ulanmagan','Ushbu kanal uchun ruxsatli HTTPS efir manzili kerak.',true);return;
  }
- timeout=setTimeout(()=>{if(v===video&&v.readyState===0)fail();},20000);
- sync();showUi();
+ const v=document.createElement('video');
+ v.className='tv-media';v.playsInline=true;v.setAttribute('playsinline','');v.setAttribute('webkit-playsinline','');
+ v.autoplay=true;v.controls=false;v.preload='auto';v.disablePictureInPicture=true;
+ $('#tvVideo').append(v);video=v;
+ const serial=requestSerial;
+ const live=()=>video===v&&serial===requestSerial;
+ const fail=()=>{if(live())status('Efir ochilmadi','Server, CORS, kanal havolasi yoki hududiy cheklovni tekshiring.',true);};
+ v.addEventListener('error',fail);
+ v.addEventListener('playing',()=>{if(!live())return;$('#tvStatus').hidden=true;stage.classList.remove('tv-failed');updateButtons();});
+ v.addEventListener('waiting',()=>{if(live())status('Buferlanmoqda…','Video buferi to‘ldirilmoqda');});
+ v.addEventListener('pause',updateButtons);v.addEventListener('play',updateButtons);
+ const play=()=>{if(live())v.play().catch(()=>{if(live())status('Ijroni boshlash uchun OK bosing','Avtomatik ijro cheklangan');});};
+ if(v.canPlayType('application/vnd.apple.mpegurl')){
+  v.src=src;v.addEventListener('loadedmetadata',()=>{seek15();play();});
+  delayTimer=setInterval(seek15,5000);play();
+ }else{
+  loadHls().then(Hls=>{
+   if(!live())return;
+   if(!Hls.isSupported()){fail();return;}
+   hls=new Hls({lowLatencyMode:false,liveSyncDuration:15,liveMaxLatencyDuration:45,maxBufferLength:35,backBufferLength:35});
+   hls.on(Hls.Events.ERROR,(_,data)=>{if(data.fatal)fail();});
+   hls.on(Hls.Events.MANIFEST_PARSED,play);
+   hls.attachMedia(v);hls.loadSource(src);
+  }).catch(fail);
+ }
+ loadTimer=setTimeout(()=>{if(live()&&v.readyState===0)fail();},20000);
+ updateButtons();
 }
-var hlsPromise=null;
+let hlsPromise=null;
 function loadHls(){
  if(window.Hls)return Promise.resolve(window.Hls);
  if(hlsPromise)return hlsPromise;
- hlsPromise=new Promise((ok,bad)=>{var sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';sc.onload=()=>window.Hls?ok(window.Hls):bad(Error('HLS missing'));sc.onerror=bad;document.head.append(sc);});
+ hlsPromise=new Promise((resolve,reject)=>{
+  const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';
+  s.onload=()=>window.Hls?resolve(window.Hls):reject(Error('HLS yuklanmadi'));
+  s.onerror=reject;document.head.append(s);
+ });
  return hlsPromise;
 }
 document.addEventListener('keydown',e=>{
  if(!stage||stage.hidden)return;
- showUi();
- if(['Escape','Backspace','BrowserBack'].includes(e.key)){e.preventDefault();e.stopImmediatePropagation();close();return;}
- if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){
-   e.preventDefault();e.stopImmediatePropagation();stage._moveFocus(e.key);return;
+ const key=e.key;
+ if(['Escape','Backspace','BrowserBack','GoBack'].includes(key)){
+  e.preventDefault();e.stopImmediatePropagation();close();return;
  }
- if(e.key==='f'||e.key==='F'||e.key==='MediaPlayPause'){
-   e.preventDefault();e.stopImmediatePropagation();if(e.key==='MediaPlayPause')$('#tvPause').click();else $('#tvMax').click();return;
+ if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(key)){
+  e.preventDefault();e.stopImmediatePropagation();
+  if(stage.classList.contains('tv-idle')){
+   if(key==='ArrowLeft'||key==='ArrowRight'){switchChannel(key==='ArrowLeft'?-1:1);return;}
+   showUi(true);return;
+  }
+  const arr=controls();
+  let i=arr.indexOf(document.activeElement);
+  if(i===-1){showUi(true);return;}
+  let target;
+  if(key==='ArrowUp')target=$('#tvExit');
+  else if(key==='ArrowDown')target=$('#tvPause');
+  else target=arr[(i+(key==='ArrowRight'?1:-1)+arr.length)%arr.length];
+  target?.focus({preventScroll:true});showUi();return;
  }
- if((e.key==='Enter'||e.key===' '||e.key==='NumpadEnter')&&document.activeElement===stage){
-   e.preventDefault();e.stopImmediatePropagation();$('#tvMax').click();
+ if(['Enter','NumpadEnter',' ','Select'].includes(key)){
+  if(stage.classList.contains('tv-idle')){
+   e.preventDefault();e.stopImmediatePropagation();showUi(true);return;
+  }
+  if(document.activeElement===stage){
+   e.preventDefault();e.stopImmediatePropagation();$('#tvPause').click();
+  }
  }
 },true);
-document.addEventListener('fullscreenchange',()=>{if(stage&&!stage.hidden)$('#tvMax').textContent=document.fullscreenElement?'⤢ Chiqish':'⛶ Katta ekran';});
 window.EKRAN_TV_PLAYER={open,close,isOpen:()=>!!stage&&!stage.hidden};
 })();
