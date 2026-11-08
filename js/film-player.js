@@ -11,7 +11,8 @@ back:'<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
 prev:'<svg viewBox="0 0 24 24"><path d="m14 5-9 7 9 7V5Z"/></svg>',
 next:'<svg viewBox="0 0 24 24"><path d="m10 5 9 7-9 7V5Z"/></svg>',
 play:'<svg viewBox="0 0 24 24"><path d="m7 4 14 8-14 8V4Z"/></svg>',
-pause:'<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>'
+pause:'<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+stop:'<svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>'
 };
 function btn(id,icon,label){return '<button type="button" id="'+id+'" class="movie-icon" aria-label="'+label+'" title="'+label+'">'+icons[icon]+'</button>';}
 function mount(){
@@ -24,7 +25,7 @@ function mount(){
  '<strong id="movieTitle"></strong><span class="movie-label">EKRAN TV</span></header>'+
  '<div class="movie-state" id="movieState" hidden><strong id="movieStateText"></strong></div>'+
  '<footer class="movie-bottom"><div class="movie-toolbar">'+btn('movieRewind','prev','5 soniya orqaga')+
- '<span class="movie-five">−5 s</span>'+btn('moviePause','pause','Pauza')+
+ '<span class="movie-five">−5 s</span>'+btn('moviePause','pause','Pauza')+btn('movieStop','stop','Stop')+
  '<span class="movie-five">+5 s</span>'+btn('movieForward','next','5 soniya oldinga')+
  '<span id="movieTime">00:00</span></div><div class="movie-progress"><div id="movieProgress"></div></div>'+
  '<small id="movieHint">Pult: ← −5 s · → +5 s · OK pauza/davom · Back chiqish</small></footer>';
@@ -33,6 +34,7 @@ function mount(){
  $('#movieRewind').onclick=()=>seek(-5);
  $('#movieForward').onclick=()=>seek(5);
  $('#moviePause').onclick=toggle;
+ $('#movieStop').onclick=stop;
  layer.addEventListener('pointermove',()=>showUI());
 }
 function message(msg,ms=3500){if(!layer)return;$('#movieStateText').textContent=msg;$('#movieState').hidden=false;
@@ -79,6 +81,12 @@ function seek(delta){
  let from=Number(video.currentTime||0),to=Math.max(0,Math.min(video.duration-.1,from+delta));
  try{video.currentTime=to;}catch(e){}
  message((delta>0?'+':'')+delta+' soniya',650);update();showUI();
+}
+function stop(){
+ if(movieIsEmbed){close();return;}
+ if(!video)return;
+ video.pause();try{video.currentTime=0;}catch(e){}
+ update();message('To‘xtatildi');showUI();
 }
 function toggle(){
  if(movieIsEmbed){message('Fembed playerining ichida pauza/boshlashni tanlang.');return;}
@@ -149,10 +157,10 @@ document.addEventListener('keydown',e=>{
   e.preventDefault();e.stopImmediatePropagation();close();return;
  }
  if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
-  if(e.target.closest?.('.movie-toolbar')){showUI();return;}
   e.preventDefault();e.stopImmediatePropagation();seek(e.key==='ArrowLeft'?-5:5);return;
  }
  if(e.key==='ArrowUp'||e.key==='ArrowDown'){showUI(true);return;}
+ if(e.key==='MediaStop'){e.preventDefault();e.stopImmediatePropagation();stop();return;}
  if(['Enter','NumpadEnter',' ','MediaPlayPause'].includes(e.key)&&document.activeElement===layer){
   e.preventDefault();e.stopImmediatePropagation();if(!uiVisible)showUI(true);else toggle();
  }
