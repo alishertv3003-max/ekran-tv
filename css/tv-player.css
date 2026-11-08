@@ -27,3 +27,8 @@ body.tv-active{overflow:hidden!important}
 .tv-top,.tv-bottom,.tv-shade{transition:opacity .2s}
 @media(max-width:650px){.tv-top{gap:7px}.tv-title small,.tv-help{display:none}.tv-btn{padding:9px;min-height:42px}.tv-buttons{justify-content:space-between;flex-wrap:nowrap}.tv-buttons .tv-btn{font-size:11px}.tv-max{margin-left:0}.tv-live{font-size:10px;padding:6px}}
 @media(min-width:1000px){.tv-btn{padding:17px 22px;min-height:56px}.tv-top,.tv-bottom{padding:26px 4vw}}
+
+/* Remote fullscreen focus feedback */
+.tv-fullscreen-notice{position:absolute;z-index:20;top:18%;left:50%;transform:translateX(-50%);max-width:min(90vw,620px);background:#211b39;border:2px solid #e6bc49;color:#fff;border-radius:14px;padding:16px 22px;text-align:center;font-weight:700;box-shadow:0 8px 30px #0008}
+.tv-fullscreen-notice[hidden]{display:none}
+#tvMax:focus{background:#8061b5;box-shadow:0 0 0 7px #ffd44444}
