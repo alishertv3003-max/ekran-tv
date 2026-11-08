@@ -136,7 +136,7 @@ public class MainActivity extends Activity {
   @Override @Deprecated public void onBackPressed(){
     if(full!=null){root.removeView(full);full=null;if(fullCallback!=null)fullCallback.onCustomViewHidden();fullCallback=null;web.setVisibility(View.VISIBLE);return;}
     if(web==null){finish();return;}
-    web.evaluateJavascript("(function(){if(window.EKRAN_FILM_PLAYER&&window.EKRAN_FILM_PLAYER.isOpen()){window.EKRAN_FILM_PLAYER.close();return true;}if(window.EKRAN_TV_PLAYER&&window.EKRAN_TV_PLAYER.isOpen()){window.EKRAN_TV_PLAYER.close();return true;}var m=document.getElementById('modal');if(m&&!m.hidden){var c=document.getElementById('pClose');if(c)c.click();return true;}return false;})()",r->{
+    web.evaluateJavascript("(function(){if(window.EKRAN_FILM_PLAYER&&window.EKRAN_FILM_PLAYER.isOpen()){window.EKRAN_FILM_PLAYER.close();return true;}if(window.EKRAN_FILM_PLAYER&&window.EKRAN_FILM_PLAYER.isOpen()){window.EKRAN_FILM_PLAYER.close();return true;}if(window.EKRAN_TV_PLAYER&&window.EKRAN_TV_PLAYER.isOpen()){window.EKRAN_TV_PLAYER.close();return true;}var m=document.getElementById('modal');if(m&&!m.hidden){var c=document.getElementById('pClose');if(c)c.click();return true;}return false;})()",r->{
       if(!"true".equals(r)){if(web.canGoBack())web.goBack();else finish();}
     });
   }
