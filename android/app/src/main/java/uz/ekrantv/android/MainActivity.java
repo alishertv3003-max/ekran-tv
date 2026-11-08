@@ -16,6 +16,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
+import android.webkit.ValueCallback;
 import android.webkit.CookieManager;
 import android.widget.FrameLayout;
 import java.io.InputStream;
@@ -29,6 +30,8 @@ public class MainActivity extends Activity {
   private WebView web;
   private View full;
   private WebChromeClient.CustomViewCallback fullCallback;
+  private ValueCallback<Uri[]> fileCallback;
+  private static final int FILE_PICKER_REQUEST=2042;
   private boolean tv;
   private boolean closing=false;
   @Override public void onCreate(Bundle state) {
@@ -87,6 +90,21 @@ public class MainActivity extends Activity {
       }
     });
     web.setWebChromeClient(new WebChromeClient(){
+      @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+        if(fileCallback!=null)fileCallback.onReceiveValue(null);
+        fileCallback=callback;
+        try {
+          Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT);
+          intent.addCategory(Intent.CATEGORY_OPENABLE);
+          intent.setType("*/*");
+          startActivityForResult(intent,FILE_PICKER_REQUEST);
+          return true;
+        }catch(Exception e){
+          fileCallback.onReceiveValue(null);fileCallback=null;
+          return false;
+        }
+      }
+
       @Override public void onShowCustomView(View v,CustomViewCallback cb){
         if(full!=null){cb.onCustomViewHidden();return;}
         full=v;fullCallback=cb;web.setVisibility(View.GONE);
@@ -132,6 +150,15 @@ public class MainActivity extends Activity {
       +"if(primary>3&&score<sc){best=a;sc=score;}});"
       +"if(best){e.preventDefault();best.focus();best.scrollIntoView({block:'center',inline:'nearest'});}},true);"
       +"setTimeout(function(){var a=opts();if(a.length)a[0].focus()},250);})()";
+  }
+  @Override @Deprecated protected void onActivityResult(int requestCode,int resultCode,Intent data){
+    super.onActivityResult(requestCode,resultCode,data);
+    if(requestCode==FILE_PICKER_REQUEST && fileCallback!=null) {
+      Uri[] result=null;
+      if(resultCode==Activity.RESULT_OK&&data!=null&&data.getData()!=null)result=new Uri[]{data.getData()};
+      fileCallback.onReceiveValue(result);
+      fileCallback=null;
+    }
   }
   @Override @Deprecated public void onBackPressed(){
     if(full!=null){root.removeView(full);full=null;if(fullCallback!=null)fullCallback.onCustomViewHidden();fullCallback=null;web.setVisibility(View.VISIBLE);return;}
